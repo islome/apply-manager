@@ -20,6 +20,7 @@ function oneOf<T extends readonly string[]>(list: T, v: unknown): v is T[number]
 
 export type VacancyInput = {
   title?: string;
+  company?: string;
   city?: string;
   major?: string;
   employment_type?: (typeof EMPLOYMENT_TYPES)[number];
@@ -42,6 +43,12 @@ export function parseVacancy(body: unknown, full: boolean): Ok<VacancyInput> | B
     const t = str(b.title);
     if (!t || t.length < 2 || t.length > 120) return bad('Title must be 2–120 characters');
     out.title = t;
+  }
+  // optional: when blank the routes fall back to the name saved in the HR profile
+  if ('company' in b) {
+    const co = str(b.company);
+    if (co === null || co.length > 80 || (co !== '' && co.length < 2)) return bad('Company must be 2–80 characters');
+    if (co) out.company = co;
   }
   if (need('city')) {
     const c = str(b.city);

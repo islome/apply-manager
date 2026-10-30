@@ -22,6 +22,17 @@ type Props = {
 const fieldClass =
   'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
 
+// The API stores phones as +998XXXXXXXXX (no spaces). Accepts "90 123 45 67", "998901234567", "+998 90 123 45 67".
+// Returns '' for empty, null when it cannot be a valid Uzbek number.
+function normalizePhone(raw: string): string | null {
+  const value = raw.trim();
+  if (!value) return '';
+  const digits = value.replace(/\D/g, '');
+  if (digits.length === 9) return `+998${digits}`;
+  if (digits.length === 12 && digits.startsWith('998')) return `+${digits}`;
+  return null;
+}
+
 export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -35,13 +46,17 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
     if (busy) return;
 
     const formData = new FormData(event.currentTarget);
-    const employeesValue = String(formData.get('employees') ?? '').trim();
+    const phone = normalizePhone(String(formData.get('hr_phone') ?? ''));
+    if (phone === null) {
+      setError("Telefon raqami +998 90 123 45 67 ko'rinishida bo'lsin.");
+      return;
+    }
     const payload = {
       company_name: String(formData.get('company_name') ?? '').trim(),
       logo_url: String(formData.get('logo_url') ?? '').trim() || null,
-      employees: employeesValue ? Number(employeesValue) : null,
+      employees: Number(formData.get('employees')),
       hr_name: String(formData.get('hr_name') ?? '').trim(),
-      hr_phone: String(formData.get('hr_phone') ?? '').trim(),
+      hr_phone: phone,
     };
 
     setBusy(true);
@@ -159,11 +174,12 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
               <input
                 name="employees"
                 type="number"
+                required
                 min={1}
                 max={1000000}
                 step={1}
                 defaultValue={profile?.employees ?? ''}
-                placeholder="Ixtiyoriy"
+                placeholder="Masalan, 25"
                 className={fieldClass}
               />
             </label>
@@ -171,10 +187,9 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
               HR ismi
               <input
                 name="hr_name"
-                required
-                minLength={2}
                 maxLength={80}
                 defaultValue={profile?.hr_name ?? ''}
+                placeholder="Ixtiyoriy"
                 className={fieldClass}
               />
             </label>
@@ -183,11 +198,9 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
               <input
                 name="hr_phone"
                 type="tel"
-                required
-                pattern="\+?[0-9\s()\-]{7,20}"
-                title="Masalan: +998 90 123 45 67"
+                maxLength={20}
                 defaultValue={profile?.hr_phone ?? ''}
-                placeholder="+998 90 123 45 67"
+                placeholder="+998 90 123 45 67 (ixtiyoriy)"
                 className={fieldClass}
               />
             </label>

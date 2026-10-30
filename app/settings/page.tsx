@@ -40,6 +40,9 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 const empty = <span className="text-zinc-500">Kiritilmagan</span>;
 
+// +998901234567 -> +998 90 123 45 67 (display only)
+const formatPhone = (p: string) => p.replace(/^(\+998)(\d{2})(\d{3})(\d{2})(\d{2})$/, '$1 $2 $3 $4 $5');
+
 export default function SettingsPage() {
   const [profile, setProfile] = useState<HrProfile | null>(null);
   const [status, setStatus] = useState<Status>('loading');
@@ -146,7 +149,7 @@ export default function SettingsPage() {
               <Row label="HR telefoni">
                 {profile.hr_phone ? (
                   <a className="text-blue-600 hover:underline" href={`tel:${profile.hr_phone.replace(/\s/g, '')}`}>
-                    {profile.hr_phone}
+                    {formatPhone(profile.hr_phone)}
                   </a>
                 ) : (
                   empty
