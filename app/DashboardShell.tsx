@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import {
   LayoutDashboard,
@@ -13,95 +13,158 @@ import {
   PanelLeft,
   Menu,
   LogOut,
-  UserRound,
   X,
 } from "lucide-react";
 import Image from "next/image";
 
+import { safeHttpUrl } from "@/lib/applications";
+
 const navigation = [
   {
-    label: "Overview",
+    label: "Bosh sahifa",
     href: "/",
     icon: LayoutDashboard,
   },
   {
-    label: "Vacancies",
+    label: "Vakansiyalar",
     href: "/vacancies",
     icon: BriefcaseBusiness,
   },
   {
-    label: "Job Applicants",
+    label: "Arizalar",
     href: "/applicants",
     icon: Users,
   },
   {
-    label: "Analytics",
+    label: "Tahlil",
     href: "/analytics",
     icon: ChartColumn,
   },
 ];
 
+/**
+ * Company shown in the header. `unset` = the profile loaded but has no company name yet,
+ * `error` = the request failed (we show nothing rather than a made-up name).
+ */
+type CompanyState =
+  | { status: "loading" }
+  | { status: "ok"; name: string; logoUrl: string | null }
+  | { status: "unset" }
+  | { status: "error" };
+
+function readCompany(data: unknown): { name: string; logoUrl: string | null } {
+  const d = data as {
+    company_name?: unknown;
+    logo_url?: unknown;
+  } | null;
+  const name = typeof d?.company_name === "string" ? d.company_name.trim() : "";
+  const logoUrl = typeof d?.logo_url === "string" && d.logo_url.trim() ? d.logo_url.trim() : null;
+  return { name, logoUrl };
+}
+
+/** Company logo from `hr_profiles.logo_url`, initial letter if there is none or it fails to load. */
+function CompanyAvatar({ name, logoUrl }: { name: string; logoUrl: string | null }) {
+  const src = safeHttpUrl(logoUrl);
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <span className="relative grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-md bg-zinc-100 text-xs font-semibold text-zinc-600">
+      {name.charAt(0).toUpperCase()}
+      {src && !failed && (
+        // eslint-disable-next-line @next/next/no-img-element -- user-provided URL
+        <img
+          src={src}
+          alt=""
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+          className="absolute inset-0 h-full w-full bg-white object-cover"
+        />
+      )}
+    </span>
+  );
+}
+
+const ghostButton =
+  "flex h-9 items-center justify-center rounded-lg text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
+
 function DashboardHeader({
   sidebarOpen,
   onToggleSidebar,
+  company,
+  onLogout,
+  loggingOut,
 }: {
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
+  company: CompanyState;
+  onLogout: () => void;
+  loggingOut: boolean;
 }) {
   return (
-    <header className="relative z-30 flex h-[60px] items-center justify-between rounded-full border border-slate-200/80 bg-white px-3 shadow-[0_4px_16px_rgba(15,23,42,0.055)] sm:px-5">
+    <header className="relative z-30 flex h-14 items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 sm:px-4">
       {/* Left: toggle + logo */}
-      <div className="flex min-w-0 items-center gap-3 sm:gap-5">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         <button
           type="button"
           onClick={onToggleSidebar}
-          aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
+          aria-label={sidebarOpen ? "Yon panelni yopish" : "Yon panelni ochish"}
           aria-expanded={sidebarOpen}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          className={`${ghostButton} w-9 shrink-0`}
         >
           {sidebarOpen ? (
-            <PanelLeft size={19} strokeWidth={1.8} />
+            <PanelLeft size={18} strokeWidth={1.5} />
           ) : (
-            <Menu size={20} strokeWidth={1.8} />
+            <Menu size={18} strokeWidth={1.5} />
           )}
         </button>
 
-        <Link href="/" className="flex min-w-0 items-center">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center">
-            <Image src="/logo.png" alt="Logo" width={25} height={25} />
-          </div>
-
-          <span className="truncate text-[17px] font-bold tracking-tight text-[#171923]">
+        <Link href="/" className="flex min-w-0 items-center gap-2">
+          <Image src="/logo.png" alt="" width={24} height={24} />
+          <span className="truncate text-base font-semibold tracking-tight text-zinc-900">
             JobBor
           </span>
         </Link>
       </div>
 
       {/* Right: company + logout */}
-      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        {company.status === "loading" && (
+          <span
+            aria-hidden="true"
+            className="h-9 w-28 animate-pulse rounded-lg bg-black/5"
+          />
+        )}
+
+        {company.status === "ok" && (
+          <Link
+            href="/settings"
+            title="Kompaniya profili"
+            className="flex h-9 max-w-[200px] items-center gap-2 rounded-lg px-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+          >
+            <CompanyAvatar key={company.logoUrl ?? company.name} name={company.name} logoUrl={company.logoUrl} />
+            <span className="hidden truncate sm:inline">{company.name}</span>
+          </Link>
+        )}
+
+        {company.status === "unset" && (
+          <Link
+            href="/settings"
+            className="flex h-9 items-center gap-2 rounded-lg px-2.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+          >
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+            <span className="hidden sm:inline">Profilni to&apos;ldiring</span>
+            <span className="sm:hidden">Profil</span>
+          </Link>
+        )}
+
         <button
           type="button"
-          className="flex h-9 max-w-[155px] items-center gap-2 rounded-full bg-slate-100 px-2.5 text-xs font-bold text-slate-800 transition-colors hover:bg-slate-200 sm:px-3"
+          onClick={onLogout}
+          disabled={loggingOut}
+          className="flex h-9 items-center gap-2 rounded-lg border border-zinc-200 px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 disabled:opacity-60"
         >
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[9px] font-black text-rose-500">
-            C
-          </span>
-
-          <span className="hidden truncate sm:inline">Canon Group</span>
-
-          <span className="sm:hidden">Canon</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            // Keyingi bosqichda Supabase Auth signOut() ulanadi.
-            console.log("Logout clicked");
-          }}
-          className="flex h-9 items-center gap-2 rounded-full border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:px-4"
-        >
-          <LogOut size={16} />
-          <span className="hidden sm:inline">Logout</span>
+          <LogOut size={16} strokeWidth={1.5} />
+          <span className="hidden sm:inline">{loggingOut ? "Chiqilmoqda…" : "Chiqish"}</span>
         </button>
       </div>
     </header>
@@ -127,15 +190,20 @@ function DashboardSidebar({
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
+  const linkClass = (active: boolean) =>
+    `flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
+      active
+        ? "bg-zinc-100 text-zinc-900"
+        : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+    }`;
+
   return (
-    <aside className="flex h-full min-h-0 w-full flex-col rounded-[26px] border border-slate-200/80 bg-white p-3 shadow-[0_6px_20px_rgba(15,23,42,0.06)]">
-      <div className="px-2 pb-3 pt-1">
-        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">
-          Menu
-        </p>
+    <aside className="flex h-full min-h-0 w-full flex-col rounded-xl border border-zinc-200 bg-white p-3">
+      <div className="px-3 pb-2 pt-1">
+        <p className="text-xs font-medium text-zinc-500">Menyu</p>
       </div>
 
-      <nav className="flex flex-col gap-1">
+      <nav className="flex flex-col gap-0.5">
         {navigation.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -146,30 +214,28 @@ function DashboardSidebar({
               href={item.href}
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
-              className={`
-                flex h-10 w-full items-center gap-3
-                rounded-xl px-3 text-sm font-semibold
-                transition-colors duration-200
-                ${
-                  active
-                    ? "bg-indigo-50 text-blue-600"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                }
-              `}
+              className={linkClass(active)}
             >
-              <Icon size={19} strokeWidth={1.8} />
+              <Icon
+                size={18}
+                strokeWidth={1.5}
+                className={active ? "text-blue-600" : "text-zinc-500"}
+              />
 
               <span className="flex-1 whitespace-nowrap">{item.label}</span>
 
               {item.href === "/applicants" && applicantCountError && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[11px] font-bold text-white">
+                <span
+                  title="Arizalar sonini yuklab bo'lmadi"
+                  className="flex h-5 min-w-5 items-center justify-center rounded-md bg-amber-50 px-1.5 text-xs font-medium text-amber-700"
+                >
                   !
                 </span>
               )}
               {item.href === "/applicants" && applicantCount !== null && (
                 <span
-                  aria-label={`${applicantCount} applicants`}
-                  className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[11px] font-bold text-white"
+                  aria-label={`${applicantCount} ta ariza`}
+                  className="flex h-5 min-w-5 items-center justify-center rounded-md bg-blue-50 px-1.5 text-xs font-medium tabular-nums text-blue-700"
                 >
                   {applicantCount}
                 </span>
@@ -179,23 +245,19 @@ function DashboardSidebar({
         })}
       </nav>
 
-      <div className="mt-auto border-t border-slate-200 pt-3">
+      <div className="mt-auto border-t border-zinc-100 pt-3">
         <Link
           href="/settings"
           onClick={onNavigate}
-          className={`
-            flex h-10 w-full items-center gap-3
-            rounded-xl px-3 text-sm font-semibold
-            transition-colors
-            ${
-              isActive("/settings")
-                ? "bg-indigo-50 text-blue-600"
-                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-            }
-          `}
+          aria-current={isActive("/settings") ? "page" : undefined}
+          className={linkClass(isActive("/settings"))}
         >
-          <Settings size={19} strokeWidth={1.8} />
-          <span>Settings</span>
+          <Settings
+            size={18}
+            strokeWidth={1.5}
+            className={isActive("/settings") ? "text-blue-600" : "text-zinc-500"}
+          />
+          <span>Sozlamalar</span>
         </Link>
       </div>
     </aside>
@@ -209,8 +271,12 @@ export default function DashboardShell({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const pathname = usePathname();
+  const router = useRouter();
   const [applicantCount, setApplicantCount] = useState<number | null>(null);
   const [applicantCountError, setApplicantCountError] = useState(false);
+  const [company, setCompany] = useState<CompanyState>({ status: "loading" });
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
 
   useEffect(() => {
     if (pathname === "/login") return;
@@ -251,18 +317,99 @@ export default function DashboardShell({
     };
   }, [pathname]);
 
+  // Company comes from the HR profile in the database (hr_profiles), never hardcoded.
+  // GET /api/hr/profile returns the profile, or null while this HR has none yet.
+  // Reloaded on navigation and when Settings saves the profile ("company:updated").
+  useEffect(() => {
+    if (pathname === "/login") return;
+
+    let active = true;
+    const loadCompany = () => {
+      void fetch("/api/hr/profile", {
+        credentials: "same-origin",
+        cache: "no-store",
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`Company request failed (${response.status})`);
+          }
+          return (await response.json()) as unknown;
+        })
+        .then((data) => {
+          if (!active) return;
+          const { name, logoUrl } = readCompany(data);
+          setCompany(name ? { status: "ok", name, logoUrl } : { status: "unset" });
+        })
+        .catch((error: unknown) => {
+          if (!active) return;
+          console.error("[dashboard] Could not load company profile", error);
+          setCompany({ status: "error" });
+        });
+    };
+
+    loadCompany();
+    window.addEventListener("company:updated", loadCompany);
+    return () => {
+      active = false;
+      window.removeEventListener("company:updated", loadCompany);
+    };
+  }, [pathname]);
+
+  async function handleLogout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    setLogoutError("");
+    try {
+      // The session cookie is HttpOnly, so only the server can clear it.
+      const response = await fetch("/api/hr/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      if (!response.ok) {
+        throw new Error(`Logout request failed (${response.status})`);
+      }
+
+      // Only after the server session is gone: wipe everything stored in this browser.
+      try {
+        window.localStorage.clear();
+        window.sessionStorage.clear();
+      } catch {
+        // storage can be blocked (private mode); the server session is already closed
+      }
+
+      router.replace("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("[dashboard] Logout failed", error);
+      setLogoutError("Chiqib bo'lmadi. Ulanishni tekshirib, qayta urinib ko'ring.");
+      setLoggingOut(false);
+    }
+  }
+
   if (pathname === "/login") return children;
 
   return (
     <div className="min-h-screen bg-[#f3f4f8]">
-      <div className="mx-auto min-h-screen max-w-[1600px] px-3 py-3 sm:px-5 sm:py-4 lg:px-7">
+      <div className="mx-auto min-h-screen max-w-[1600px] px-3 py-4 sm:px-5 lg:px-7">
         {/* Global header */}
         <DashboardHeader
           sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen((previous) => !previous)}
+          company={company}
+          onLogout={() => void handleLogout()}
+          loggingOut={loggingOut}
         />
 
-        <div className="relative mt-4 flex items-start gap-[15px]">
+        {logoutError && (
+          <p
+            role="alert"
+            className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700"
+          >
+            {logoutError}
+          </p>
+        )}
+
+        <div className="relative mt-4 flex items-start gap-4">
           {/* Desktop sidebar */}
           <div
             aria-hidden={!sidebarOpen}
@@ -301,11 +448,11 @@ export default function DashboardShell({
             {/* Overlay */}
             <button
               type="button"
-              aria-label="Close navigation"
+              aria-label="Navigatsiyani yopish"
               tabIndex={sidebarOpen ? 0 : -1}
               onClick={() => setSidebarOpen(false)}
               className={`
-                absolute inset-0 bg-slate-950/30
+                absolute inset-0 bg-zinc-900/30
                 transition-opacity duration-300
                 ${sidebarOpen ? "opacity-100" : "opacity-0"}
               `}
@@ -320,18 +467,18 @@ export default function DashboardShell({
                 ${sidebarOpen ? "translate-x-0" : "-translate-x-[110%]"}
               `}
             >
-              <div className="mb-3 flex h-12 items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 shadow-sm">
-                <span className="text-sm font-bold text-slate-900">
-                  Navigation
+              <div className="mb-3 flex h-12 items-center justify-between rounded-xl border border-zinc-200 bg-white px-4">
+                <span className="text-sm font-semibold text-zinc-900">
+                  Navigatsiya
                 </span>
 
                 <button
                   type="button"
-                  aria-label="Close sidebar"
+                  aria-label="Yon panelni yopish"
                   onClick={() => setSidebarOpen(false)}
-                  className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+                  className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
                 >
-                  <X size={19} />
+                  <X size={18} />
                 </button>
               </div>
 

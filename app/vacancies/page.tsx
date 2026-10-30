@@ -17,6 +17,12 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'inactive', label: 'Nofaol' },
 ];
 
+const iconButton =
+  'grid h-8 w-8 place-items-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 disabled:opacity-50';
+const iconNeutral = 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900';
+const iconDanger = 'text-zinc-500 hover:bg-red-50 hover:text-red-600';
+const iconOn = 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700';
+
 function VacancyCard({
   v,
   busy,
@@ -31,72 +37,73 @@ function VacancyCard({
   onDelete: () => void;
 }) {
   return (
-    <article
-      className={`flex flex-col gap-3.5 rounded-[22px] border border-slate-200 bg-white p-4.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
-        v.is_active ? '' : 'opacity-75'
-      }`}
-    >
-      <div className="flex items-start justify-between gap-2.5">
-        <h3 className="wrap-break-word text-base font-bold leading-snug text-slate-900">{v.title}</h3>
-        <span
-          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
-            v.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+    <article className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300">
+      <div className="flex items-start justify-between gap-3">
+        <h3
+          className={`wrap-break-word text-base font-semibold leading-snug ${
+            v.is_active ? 'text-zinc-900' : 'text-zinc-600'
           }`}
         >
+          {v.title}
+        </h3>
+        <span
+          className={`inline-flex shrink-0 items-center gap-1.5 pt-0.5 text-xs font-medium ${
+            v.is_active ? 'text-emerald-700' : 'text-zinc-500'
+          }`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${v.is_active ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
           {v.is_active ? 'Faol' : 'Nofaol'}
         </span>
       </div>
 
-      <p className="text-[22px] font-bold tracking-tight text-slate-900">{salaryLabel(v)}</p>
-      <p className="-mt-1.5 text-[13px] text-slate-500">
-        {v.company} · {v.city}
-      </p>
-
-      <div className="flex flex-wrap gap-1.5">
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-800">
-          {employmentLabel(v.employment_type)}
-        </span>
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-800">{v.major}</span>
-        <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600">
-          {v.applications_count} ta ariza
-        </span>
+      <div className="space-y-0.5">
+        <p className="text-sm font-medium text-zinc-900">{salaryLabel(v)}</p>
+        <p className="text-sm text-zinc-500">
+          {v.company} · {v.city}
+        </p>
       </div>
 
-      <div className="mt-auto border-t border-slate-200 pt-3 text-xs text-slate-500">
-        {formatDate(v.created_at)}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">{employmentLabel(v.employment_type)}</span>
+        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">{v.major}</span>
+        <span className="px-1 text-xs font-medium text-blue-600">{v.applications_count} ta ariza</span>
       </div>
 
-      <div className="flex flex-wrap gap-2" aria-label={`${v.title} actions`}>
-        <button
-          type="button"
-          onClick={onToggle}
-          disabled={busy}
-          aria-pressed={v.is_active}
-          className={`inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 text-xs font-semibold disabled:opacity-50 ${
-            v.is_active
-              ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
-              : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-          }`}
-        >
-          <Power size={15} />
-          {v.is_active ? '' : ''}
-        </button>
-        <button
-          type="button"
-          onClick={onEdit}
-          disabled={busy}
-          className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-blue-50 px-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
-        >
-          <Pencil size={15} />
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={busy}
-          className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-red-50 px-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
-        >
-          <Trash2 size={15} />
-        </button>
+      <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-3">
+        <span className="text-xs text-zinc-500">{formatDate(v.created_at)}</span>
+        <div className="-mr-1.5 flex items-center gap-0.5" role="group" aria-label={`${v.title}: amallar`}>
+          <button
+            type="button"
+            onClick={onToggle}
+            disabled={busy}
+            aria-pressed={v.is_active}
+            aria-label={v.is_active ? 'Nofaol qilish' : 'Faollashtirish'}
+            title={v.is_active ? 'Nofaol qilish' : 'Faollashtirish'}
+            className={`${iconButton} ${v.is_active ? iconOn : iconNeutral}`}
+          >
+            <Power size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={onEdit}
+            disabled={busy}
+            aria-label="Tahrirlash"
+            title="Tahrirlash"
+            className={`${iconButton} ${iconNeutral}`}
+          >
+            <Pencil size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={busy}
+            aria-label="O'chirish"
+            title="O'chirish"
+            className={`${iconButton} ${iconDanger}`}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
     </article>
   );
@@ -123,13 +130,16 @@ export default function VacanciesPage() {
       });
       if (!response.ok) {
         const result = (await response.json().catch(() => null)) as { error?: string } | null;
-        setActionError(result?.error ?? `Could not ${method === 'DELETE' ? 'delete' : 'update'} vacancy (${response.status})`);
+        setActionError(
+          result?.error ??
+            `Vakansiyani ${method === 'DELETE' ? "o'chirib" : 'yangilab'} bo'lmadi (${response.status})`,
+        );
         return false;
       }
       await reload();
       return true;
     } catch {
-      setActionError('Network error — check your connection and try again.');
+      setActionError("Tarmoq xatosi — ulanishni tekshirib, qayta urinib ko'ring.");
       return false;
     } finally {
       setBusyVacancyId(null);
@@ -138,7 +148,7 @@ export default function VacanciesPage() {
 
   async function deleteVacancy(vacancy: Vacancy) {
     const confirmed = window.confirm(
-      `Delete "${vacancy.title}"? Its associated applications will also be deleted.`,
+      `"${vacancy.title}" o'chirilsinmi? Unga tegishli arizalar ham o'chiriladi.`,
     );
     if (!confirmed) return;
     await updateVacancy(vacancy, 'DELETE');
@@ -156,47 +166,47 @@ export default function VacanciesPage() {
   const activeCount = vacancies.filter((v) => v.is_active).length;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <header className="mb-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Vacancies</h1>
-          <button
-            type="button"
-            onClick={() => setAddModalOpen(true)}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
-          >
-            <Plus size={18} />
-            Add vacancy
-          </button>
+    <div className="mx-auto w-full max-w-[1600px] px-4 py-8">
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Vakansiyalar</h1>
+          <p className="text-sm text-zinc-500">
+            {state === 'ok'
+              ? vacancies.length
+                ? `${vacancies.length} ta vakansiya · ${activeCount} tasi faol`
+                : "Hali vakansiya qo'shilmagan"
+              : ' '}
+          </p>
         </div>
-        <p className="text-slate-500">
-          {state === 'ok'
-            ? vacancies.length
-              ? `${vacancies.length} ta vakansiya · ${activeCount} tasi faol`
-              : "Hali vakansiya qo'shilmagan"
-            : ' '}
-        </p>
+        <button
+          type="button"
+          onClick={() => setAddModalOpen(true)}
+          className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+        >
+          <Plus size={16} />
+          Vakansiya qo&apos;shish
+        </button>
       </header>
 
       {state === 'ok' && vacancies.length > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="mb-5 flex flex-wrap items-center gap-3">
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Nomi, shahar yoki yo'nalish bo'yicha qidirish"
             aria-label="Vakansiyalarni qidirish"
-            className="h-11 min-w-55 flex-1 rounded-[14px] border border-slate-200 bg-white px-3.5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+            className="h-10 min-w-55 flex-1 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
-          <div className="flex gap-1 rounded-[14px] border border-slate-200 bg-white p-1" role="group" aria-label="Holat">
+          <div className="flex h-10 items-center gap-0.5 rounded-lg bg-black/5 p-1" role="group" aria-label="Holat">
             {FILTERS.map((f) => (
               <button
                 key={f.id}
                 type="button"
                 onClick={() => setFilter(f.id)}
                 aria-pressed={filter === f.id}
-                className={`rounded-[10px] px-3 py-1.5 text-sm font-semibold ${
-                  filter === f.id ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:text-slate-900'
+                className={`h-8 rounded-md px-3 text-sm font-medium transition-colors ${
+                  filter === f.id ? 'bg-white text-zinc-900 ring-1 ring-zinc-200' : 'text-zinc-600 hover:text-zinc-900'
                 }`}
               >
                 {f.label}
@@ -207,22 +217,22 @@ export default function VacanciesPage() {
       )}
 
       {state === 'loading' && (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(300px,100%),1fr))] gap-3.5" aria-busy="true">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-3" aria-busy="true">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-48 animate-pulse rounded-[22px] border border-slate-200 bg-white" />
+            <div key={i} className="h-44 animate-pulse rounded-xl bg-black/5" />
           ))}
         </div>
       )}
 
       {state === 'error' && (
-        <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
           <NotFoundAnimation />
-          <h2 className="text-lg font-bold text-slate-900">Vakansiyalarni yuklab bo&apos;lmadi</h2>
-          <p className="max-w-sm text-slate-500">{error}</p>
+          <h2 className="text-base font-semibold text-zinc-900">Vakansiyalarni yuklab bo&apos;lmadi</h2>
+          <p className="max-w-sm text-sm text-zinc-600">{error}</p>
           <button
             type="button"
             onClick={retry}
-            className="h-11 rounded-full bg-blue-600 px-5 font-semibold text-white hover:bg-blue-700"
+            className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
           >
             Qayta urinish
           </button>
@@ -230,28 +240,28 @@ export default function VacanciesPage() {
       )}
 
       {actionError && (
-        <p role="alert" className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
           {actionError}
         </p>
       )}
 
       {state === 'ok' && vacancies.length === 0 && (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+        <div className="rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
           <EmptyBoxAnimation />
-          <h2 className="text-lg font-bold text-slate-900">Hali vakansiya yo&apos;q</h2>
-          <p className="mt-1 text-slate-500">Birinchi vakansiyangizni qo&apos;shing, u shu yerda chiqadi.</p>
+          <h2 className="text-base font-semibold text-zinc-900">Hali vakansiya yo&apos;q</h2>
+          <p className="mt-1 text-sm text-zinc-600">Birinchi vakansiyangizni qo&apos;shing, u shu yerda chiqadi.</p>
         </div>
       )}
 
       {state === 'ok' && vacancies.length > 0 && visible.length === 0 && (
-        <div className="py-6 text-center text-slate-500">
+        <div className="py-6 text-center text-sm text-zinc-500">
           <EmptyBoxAnimation />
           <p>Hech narsa topilmadi.</p>
         </div>
       )}
 
       {state === 'ok' && visible.length > 0 && (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(300px,100%),1fr))] gap-3.5">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-3">
           {visible.map((v) => (
             <VacancyCard
               key={v.id}

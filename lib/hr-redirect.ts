@@ -1,5 +1,5 @@
 export const LOGIN_PATH = '/login';
-export const DEFAULT_AFTER_LOGIN = '/dashboard'; // where HR lands after signing in (your overview page)
+export const DEFAULT_AFTER_LOGIN = '/'; // where HR lands after signing in (your overview page)
 
 /**
  * `?next=` comes from the URL, so it is untrusted. Only same-site, in-app paths are allowed;

@@ -9,7 +9,7 @@ type Props = {
 };
 
 const fieldClass =
-  'mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100';
+  'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
 
 export default function AddVacancyModal({ onClose, onCreated }: Props) {
   const [busy, setBusy] = useState(false);
@@ -48,14 +48,14 @@ export default function AddVacancyModal({ onClose, onCreated }: Props) {
         const result = (await response.json().catch(() => null)) as
           | { error?: string }
           | null;
-        setError(result?.error ?? `Could not create vacancy (${response.status})`);
+        setError(result?.error ?? `Vakansiyani yaratib bo'lmadi (${response.status})`);
         return;
       }
 
       await onCreated();
       onClose();
     } catch {
-      setError('Network error — check your connection and try again.');
+      setError("Tarmoq xatosi — ulanishni tekshirib, qayta urinib ko'ring.");
     } finally {
       setBusy(false);
     }
@@ -63,7 +63,7 @@ export default function AddVacancyModal({ onClose, onCreated }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/30 p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !busy) onClose();
       }}
@@ -72,119 +72,119 @@ export default function AddVacancyModal({ onClose, onCreated }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-vacancy-title"
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl sm:p-7"
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 shadow-lg sm:p-6"
       >
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
-            <h2 id="add-vacancy-title" className="text-xl font-bold text-slate-900">
-              Add vacancy
+            <h2 id="add-vacancy-title" className="text-lg font-semibold text-zinc-900">
+              Vakansiya qo'shish
             </h2>
-            <p className="mt-1 text-sm text-slate-500">Enter the vacancy details.</p>
+            <p className="mt-1 text-sm text-zinc-500">Vakansiya ma'lumotlarini kiriting.</p>
           </div>
           <button
             type="button"
-            aria-label="Close"
+            aria-label="Yopish"
             disabled={busy}
             onClick={onClose}
-            className="rounded-full p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50"
+            className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-50"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <p role="alert" className="rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-700">
+            <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700">
               {error}
             </p>
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="text-sm font-semibold text-slate-700">
-              Title
+            <label className="text-sm font-medium text-zinc-700">
+              Lavozim nomi
               <input name="title" required minLength={2} maxLength={120} className={fieldClass} />
             </label>
-            <label className="text-sm font-semibold text-slate-700">
-              Company
+            <label className="text-sm font-medium text-zinc-700">
+              Kompaniya
               <input name="company" required minLength={2} maxLength={80} className={fieldClass} />
             </label>
-            <label className="text-sm font-semibold text-slate-700">
-              City
+            <label className="text-sm font-medium text-zinc-700">
+              Shahar
               <input name="city" required maxLength={80} className={fieldClass} />
             </label>
-            <label className="text-sm font-semibold text-slate-700">
-              Major
+            <label className="text-sm font-medium text-zinc-700">
+              Yo'nalish
               <input name="major" required maxLength={100} className={fieldClass} />
             </label>
-            <label className="text-sm font-semibold text-slate-700">
-              Employment type
+            <label className="text-sm font-medium text-zinc-700">
+              Bandlik turi
               <select name="employment_type" defaultValue="full_time" className={fieldClass}>
-                <option value="full_time">Full time</option>
-                <option value="part_time">Part time</option>
-                <option value="remote">Remote</option>
-                <option value="internship">Internship</option>
+                <option value="full_time">To'liq kun</option>
+                <option value="part_time">Yarim kun</option>
+                <option value="remote">Masofaviy</option>
+                <option value="internship">Amaliyot</option>
               </select>
             </label>
-            <label className="text-sm font-semibold text-slate-700">
-              Maximum salary
+            <label className="text-sm font-medium text-zinc-700">
+              Maksimal maosh
               <input
                 name="salary_max"
                 type="number"
                 min={0}
                 step={1}
                 className={fieldClass}
-                placeholder="Optional"
+                placeholder="Ixtiyoriy"
               />
             </label>
-            <label className="text-sm font-semibold text-slate-700">
-              Salary currency
+            <label className="text-sm font-medium text-zinc-700">
+              Valyuta
               <select name="salary_currency" defaultValue="UZS" className={fieldClass}>
                 <option value="UZS">UZS</option>
                 <option value="USD">USD</option>
               </select>
             </label>
-            <label className="flex items-center gap-2 self-end pb-3 text-sm font-semibold text-slate-700">
+            <label className="flex items-center gap-2 self-end pb-2.5 text-sm font-medium text-zinc-700">
               <input name="is_active" type="checkbox" defaultChecked className="size-4 accent-blue-600" />
-              Active
+              Faol
             </label>
           </div>
 
-          <label className="block text-sm font-semibold text-slate-700">
-            Description
+          <label className="block text-sm font-medium text-zinc-700">
+            Tavsif
             <textarea
               name="description"
               required
               maxLength={4000}
               rows={4}
-              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
           </label>
 
-          <label className="block text-sm font-semibold text-slate-700">
-            Requirements
+          <label className="block text-sm font-medium text-zinc-700">
+            Talablar
             <textarea
               name="requirements"
               maxLength={4000}
               rows={3}
-              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
           </label>
 
-          <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <div className="flex justify-end gap-2 border-t border-zinc-100 pt-4">
             <button
               type="button"
               disabled={busy}
               onClick={onClose}
-              className="h-11 rounded-full border border-slate-200 px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="h-10 rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
             >
-              Cancel
+              Bekor qilish
             </button>
             <button
               type="submit"
               disabled={busy}
-              className="h-11 rounded-full bg-blue-600 px-5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {busy ? 'Saving…' : 'Add vacancy'}
+              {busy ? 'Saqlanmoqda…' : "Qo'shish"}
             </button>
           </div>
         </form>

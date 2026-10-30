@@ -22,17 +22,17 @@ type Props = {
   onNotify: (message: string) => void;
 };
 
-function Field({ label, children, wide }: { label: string; children: ReactNode; wide?: boolean }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className={`min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 ${wide ? 'col-span-2' : ''}`}>
-      <dt className="mb-0.5 text-xs text-slate-400">{label}</dt>
-      <dd className="break-words text-[13px] font-semibold text-slate-900">{children}</dd>
+    <div className="grid grid-cols-[110px_1fr] gap-3 py-2.5 text-sm">
+      <dt className="text-zinc-500">{label}</dt>
+      <dd className="min-w-0 break-words text-zinc-900">{children}</dd>
     </div>
   );
 }
 
 /**
- * Candidate card. Uses the native <dialog>, so Esc, focus trapping and the backdrop come for free.
+ * Candidate side panel. Uses the native <dialog>, so Esc, focus trapping and the backdrop come for free.
  * Stage buttons here are also the touch/keyboard way to move a card (drag and drop is mouse only).
  */
 export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props) {
@@ -69,24 +69,34 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
         if (e.target === e.currentTarget) onClose(); // click on the backdrop
       }}
       aria-labelledby="applicant-title"
-      className="m-auto w-[min(560px,calc(100vw-24px))] max-h-[calc(100vh-24px)] overflow-hidden rounded-[28px] border-0 bg-white p-0 shadow-2xl backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm"
+      className="my-0 mr-0 ml-auto h-dvh max-h-none w-[min(440px,100vw)] overflow-hidden border-0 border-l border-zinc-200 bg-white p-0 backdrop:bg-zinc-900/30"
     >
       {a && (
-        <div className="flex max-h-[calc(100vh-24px)] flex-col">
-          <div className="flex items-center justify-between px-6 pb-2 pt-5">
-            <h2 className="text-lg font-bold tracking-tight text-slate-900">Candidate</h2>
+        <div className="flex h-full flex-col">
+          <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-3">
+            <h2 className="text-sm font-medium text-zinc-500">Candidate</h2>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="grid h-10 w-10 place-items-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
             >
-              <CloseIcon className="h-5 w-5" />
+              <CloseIcon className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="overflow-y-auto px-6 pb-6">
-            <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-4" role="group" aria-label="Move to stage">
+          <div className="flex-1 overflow-y-auto px-5 pb-6">
+            <div className="flex items-center gap-4 py-5">
+              <Avatar key={c?.photo_url ?? name} name={name} url={c?.photo_url} className="h-14 w-14 text-base" />
+              <div className="min-w-0">
+                <h3 id="applicant-title" className="break-words text-lg font-semibold tracking-tight text-zinc-900">
+                  {name}
+                </h3>
+                <p className="text-sm text-zinc-500">{c?.major ?? 'No major'}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 pb-5" role="group" aria-label="Move to stage">
               {STAGES.map((s) => {
                 const active = s.id === a.status;
                 return (
@@ -96,34 +106,24 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
                     aria-pressed={active}
                     disabled={active}
                     onClick={() => onMove(a.id, s.id)}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                       active
-                        ? `${s.soft} ${s.text} border-transparent ring-1 ${s.ring}`
-                        : 'border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-zinc-900 text-white'
+                        : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
                     }`}
                   >
-                    <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+                    <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
                     {s.label}
                   </button>
                 );
               })}
             </div>
 
-            <div className="flex items-center gap-4 py-5">
-              <Avatar key={c?.photo_url ?? name} name={name} url={c?.photo_url} className="h-20 w-20 text-lg" />
-              <div className="min-w-0">
-                <h3 id="applicant-title" className="break-words text-xl font-bold tracking-tight text-slate-900">
-                  {name}
-                </h3>
-                <p className="text-slate-500">{c?.major ?? 'No major'}</p>
-              </div>
-            </div>
-
-            <dl className="grid grid-cols-2 gap-2.5">
-              <Field label="Applied for" wide>
-                {a.vacancy?.title ?? 'Deleted vacancy'}
+            <dl className="divide-y divide-zinc-100 border-t border-zinc-100">
+              <Field label="Applied for">
+                <span className="font-medium">{a.vacancy?.title ?? 'Deleted vacancy'}</span>
                 {a.vacancy && (
-                  <span className="block pt-0.5 text-xs font-normal text-slate-500">
+                  <span className="block pt-0.5 text-xs text-zinc-500">
                     {[
                       a.vacancy.company,
                       a.vacancy.city,
@@ -168,8 +168,8 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
               <Field label="Applied">{formatDateTime(a.created_at)}</Field>
               <Field label="Last update">{formatDateTime(a.updated_at)}</Field>
               {c?.experience_text && (
-                <Field label="About experience" wide>
-                  <span className="whitespace-pre-wrap font-normal">{c.experience_text}</span>
+                <Field label="About experience">
+                  <span className="whitespace-pre-wrap">{c.experience_text}</span>
                 </Field>
               )}
             </dl>
@@ -179,9 +179,9 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
                 type="button"
                 onClick={onResume}
                 disabled={resumeBusy}
-                className="mt-4 inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 px-5 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-60"
+                className="mt-5 inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-900 hover:bg-zinc-50 disabled:opacity-60"
               >
-                <DownloadIcon className="h-[18px] w-[18px]" />
+                <DownloadIcon className="h-4 w-4" />
                 {resumeBusy ? 'Opening…' : 'Open resume'}
               </button>
             )}
