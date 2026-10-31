@@ -20,14 +20,16 @@ export default function AddVacancyModal({ onClose, onCreated }: Props) {
     if (busy) return;
 
     const formData = new FormData(event.currentTarget);
-    const salaryValue = String(formData.get('salary_max') ?? '').trim();
+    const salaryMin = String(formData.get('salary_min') ?? '').trim();
+    const salaryMax = String(formData.get('salary_max') ?? '').trim();
     const payload = {
       title: String(formData.get('title') ?? ''),
       company: String(formData.get('company') ?? ''),
       city: String(formData.get('city') ?? ''),
       major: String(formData.get('major') ?? ''),
       employment_type: String(formData.get('employment_type') ?? ''),
-      salary_max: salaryValue ? Number(salaryValue) : null,
+      salary_min: salaryMin ? Number(salaryMin) : null,
+      salary_max: salaryMax ? Number(salaryMax) : null,
       salary_currency: String(formData.get('salary_currency') ?? ''),
       description: String(formData.get('description') ?? ''),
       requirements: String(formData.get('requirements') ?? ''),
@@ -124,6 +126,17 @@ export default function AddVacancyModal({ onClose, onCreated }: Props) {
                 <option value="remote">Masofaviy</option>
                 <option value="internship">Amaliyot</option>
               </select>
+            </label>
+            <label className="text-sm font-medium text-zinc-700">
+              Minimal maosh
+              <input
+                name="salary_min"
+                type="number"
+                min={0}
+                step={1}
+                className={fieldClass}
+                placeholder="Ixtiyoriy"
+              />
             </label>
             <label className="text-sm font-medium text-zinc-700">
               Maksimal maosh

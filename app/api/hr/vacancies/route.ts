@@ -4,9 +4,8 @@ import { getCompanyName, requireHr } from '@/lib/hr-auth';
 import { dbFail, fail, readJson } from '@/lib/hr-http';
 import { parseVacancy } from '@/lib/hr-validate';
 
-
-// Note: vacancies have no owner column, so every HR user sees every vacancy.
-// If you later run several companies, add vacancies.hr_profile_id and filter on it here.
+// Har vakansiya vacancies.hr_user_id orqali o'z egasiga bog'langan.
+// hr_user_id HECH QACHON mijozdan olinmaydi: faqat sessiyadan (requireHr).
 
 export async function GET(req: NextRequest) {
   const auth = await requireHr(req);
@@ -15,6 +14,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await supabaseAdmin()
     .from('vacancies')
     .select('*')
+    .eq('hr_user_id', auth.hr.id)
     .order('created_at', { ascending: false });
   if (error) return dbFail(error);
   return NextResponse.json(data ?? []);
@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin()
     .from('vacancies')
-    .insert({ ...parsed.data, company })
+    // hr_user_id oxirida: mijoz yuborgan qiymat har holda ustidan yoziladi
+    .insert({ ...parsed.data, company, hr_user_id: auth.hr.id })
     .select()
     .single();
   if (error) return dbFail(error);

@@ -30,6 +30,17 @@ async function sendMessage(chat_id: string | number, text: string) {
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "method" }, 405);
 
+  // Secret o'rnatilmagan bo'lsa "Bearer undefined" kabi qiymat o'tib ketmasin
+  const missing = [
+    !BOT && "TELEGRAM_BOT_TOKEN",
+    !WEBHOOK_SECRET && "TG_WEBHOOK_SECRET",
+    !NOTIFY_SECRET && "NOTIFY_SECRET",
+  ].filter(Boolean);
+  if (missing.length) {
+    console.error("secret yo'q:", missing.join(", "));
+    return json({ error: "not configured", missing }, 500);
+  }
+
   // 1) Telegram -> panel
   const tgSecret = req.headers.get("x-telegram-bot-api-secret-token");
   if (tgSecret) {
