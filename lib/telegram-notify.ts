@@ -1,20 +1,39 @@
-// Next.js server tomonida ishlatiladi (API route / server action). Brauzerga CHIQARMANG.
-const URL_ = process.env.TELEGRAM_FUNCTION_URL!; // .../functions/v1/telegram-notification
-const SECRET = process.env.TELEGRAM_NOTIFY_SECRET!;
+// Nomzodga Job Applier boti orqali xabar yuboradi. Xato bo'lsa FAQAT logga yozadi (HR amali buzilmaydi).
 
-// candidateId -> funksiya candidates.telegram_id ni o'zi topadi (id ustuni nomi boshqacha bo'lsa o'zgartiring)
-export async function notifyCandidate(candidateId: string | number, text: string) {
-  try {
-    const res = await fetch(URL_, {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${SECRET}` },
-      body: JSON.stringify({ candidate_id: candidateId, text }),
-    });
-    return res.ok;
-  } catch {
-    return false; // xabar yuborilmasa asosiy amal buzilmasin
-  }
+const STATUS_TEXT: Record<string, string> = {
+  new: 'Yangi',
+  confirmed: 'Tasdiqlandi',
+  interview: 'Suhbat',
+  hired: 'Qabul qilindi',
+  cancel: 'Rad etildi',
+};
+
+export function statusMessage(status: string, vacancyTitle?: string | null): string {
+  const label = STATUS_TEXT[status] ?? status;
+  const vacancy = vacancyTitle ? ` («${vacancyTitle}»)` : '';
+  return `Arizangiz${vacancy} holati yangilandi: ${label}.\nBatafsil ma'lumot ilovada.`;
 }
 
-// Misol: yangi ariza kelganda
-// await notifyCandidate(candidate.id, `Arizangiz qabul qilindi: <b>${vacancyTitle}</b>`);
+export async function sendTelegramMessage(chatId: number, text: string): Promise<void> {
+  const token = (globalThis as typeof globalThis & {
+    process?: { env?: Record<string, string | undefined> };
+  }).process?.env?.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    console.error('[telegram] TELEGRAM_BOT_TOKEN is not set; notification skipped');
+    return;
+  }
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { description?: string } | null;
+      console.error('[telegram] sendMessage failed:', res.status, body?.description);
+    }
+  } catch (e) {
+    console.error('[telegram] sendMessage error:', e instanceof Error ? e.message : e);
+  }
+}
