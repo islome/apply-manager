@@ -27,10 +27,14 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   // Oldingi status va nomzod (xabar faqat status haqiqatan o'zgarsa yuboriladi)
   const { data: before, error: beforeError } = await db
     .from('applications')
-    .select('status, candidate:candidates(telegram_id, full_name), vacancy:vacancies(title)')
+    .select('status, candidate:candidates(telegram_id, full_name), vacancy:vacancies(title, hr_user_id)')
     .eq('id', id)
     .single();
   if (beforeError) return dbFail(beforeError);
+
+  // Faqat o'z vakansiyasiga kelgan arizani o'zgartirish mumkin (boshqa HR niki — 404)
+  const owner = Array.isArray(before.vacancy) ? before.vacancy[0] : before.vacancy;
+  if (!owner || owner.hr_user_id !== auth.hr.id) return fail(404, 'Not found');
 
   const { data, error } = await db
     .from('applications')

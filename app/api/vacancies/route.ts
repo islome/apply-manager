@@ -9,7 +9,7 @@ import { dbFail, fail } from '@/lib/hr-http';
  * GET /api/vacancies?active=true  / ?active=false -> only active / only inactive
  *
  * Every vacancy comes with `applications_count` (how many candidates applied).
- * Vacancies have no owner column, so every signed-in HR sees all of them.
+ * Faqat login qilgan HR ning o'z vakansiyalari (vacancies.hr_user_id).
  */
 export async function GET(req: NextRequest) {
   const auth = await requireHr(req);
@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
   let query = supabaseAdmin()
     .from('vacancies')
     .select('*, applications(count)')
+    .eq('hr_user_id', auth.hr.id)
     .order('created_at', { ascending: false });
   if (active !== null) query = query.eq('is_active', active === 'true');
 
