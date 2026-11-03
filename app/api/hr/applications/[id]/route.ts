@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireHr } from '@/lib/hr-auth';
 import { dbFail, fail, isUuid, readJson } from '@/lib/hr-http';
 import { APPLICATION_STATUSES } from '@/lib/hr-validate';
-import { sendTelegramMessage, statusMessage } from '@/lib/telegram-notify';
+import { notifyStatusChange } from '@/lib/telegram-notify';
 
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   // Oldingi status va nomzod (xabar faqat status haqiqatan o'zgarsa yuboriladi)
   const { data: before, error: beforeError } = await db
     .from('applications')
-    .select('status, candidate:candidates(telegram_id), vacancy:vacancies(title)')
+    .select('status, candidate:candidates(telegram_id, full_name), vacancy:vacancies(title)')
     .eq('id', id)
     .single();
   if (beforeError) return dbFail(beforeError);
@@ -44,7 +44,10 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     const candidate = Array.isArray(before.candidate) ? before.candidate[0] : before.candidate;
     const vacancy = Array.isArray(before.vacancy) ? before.vacancy[0] : before.vacancy;
     if (candidate?.telegram_id) {
-      await sendTelegramMessage(candidate.telegram_id, statusMessage(status, vacancy?.title));
+      await notifyStatusChange(candidate.telegram_id, status, {
+        vacancyTitle: vacancy?.title,
+        fullName: candidate.full_name,
+      });
     }
   }
   return NextResponse.json(data);
