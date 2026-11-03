@@ -13,19 +13,26 @@ export async function GET(req: NextRequest) {
   const own = await ownVacancyIds(sb, auth.hr.id);
   if (own.error) return dbFail(own.error as Parameters<typeof dbFail>[0]);
 
-  let count = 0;
+  const candidates = new Set<string>();
   if (own.ids.length > 0) {
-    const { data, error } = await sb
-      .from("applications")
-      .select("candidate_id")
-      .in("vacancy_id", own.ids)
-      .limit(10000);
-    if (error) return dbFail(error);
-    count = new Set((data ?? []).map((r) => r.candidate_id)).size;
+    const pageSize = 1000;
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await sb
+        .from("applications")
+        .select("candidate_id")
+        .in("vacancy_id", own.ids)
+        .range(from, from + pageSize - 1);
+      if (error) return dbFail(error);
+
+      for (const row of data ?? []) {
+        if (row.candidate_id) candidates.add(row.candidate_id);
+      }
+      if (!data || data.length < pageSize) break;
+    }
   }
 
   return NextResponse.json(
-    { count },
+    { count: candidates.size },
     { headers: { "Cache-Control": "private, no-store, max-age=0" } },
   );
 }
