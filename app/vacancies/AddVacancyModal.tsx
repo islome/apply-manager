@@ -24,7 +24,6 @@ export default function AddVacancyModal({ onClose, onCreated }: Props) {
     const salaryMax = String(formData.get('salary_max') ?? '').trim();
     const payload = {
       title: String(formData.get('title') ?? ''),
-      company: String(formData.get('company') ?? ''),
       city: String(formData.get('city') ?? ''),
       major: String(formData.get('major') ?? ''),
       employment_type: String(formData.get('employment_type') ?? ''),
@@ -107,10 +106,6 @@ export default function AddVacancyModal({ onClose, onCreated }: Props) {
               <input name="title" required minLength={2} maxLength={120} className={fieldClass} />
             </label>
             <label className="text-sm font-medium text-zinc-700">
-              Kompaniya
-              <input name="company" required minLength={2} maxLength={80} className={fieldClass} />
-            </label>
-            <label className="text-sm font-medium text-zinc-700">
               Shahar
               <input name="city" required maxLength={80} className={fieldClass} />
             </label>
@@ -127,35 +122,37 @@ export default function AddVacancyModal({ onClose, onCreated }: Props) {
                 <option value="internship">Amaliyot</option>
               </select>
             </label>
-            <label className="text-sm font-medium text-zinc-700">
-              Minimal maosh
-              <input
-                name="salary_min"
-                type="number"
-                min={0}
-                step={1}
-                className={fieldClass}
-                placeholder="Ixtiyoriy"
-              />
-            </label>
-            <label className="text-sm font-medium text-zinc-700">
-              Maksimal maosh
-              <input
-                name="salary_max"
-                type="number"
-                min={0}
-                step={1}
-                className={fieldClass}
-                placeholder="Ixtiyoriy"
-              />
-            </label>
-            <label className="text-sm font-medium text-zinc-700">
-              Valyuta
-              <select name="salary_currency" defaultValue="UZS" className={fieldClass}>
-                <option value="UZS">UZS</option>
-                <option value="USD">USD</option>
-              </select>
-            </label>
+            <div className="grid gap-4 sm:col-span-2 sm:grid-cols-3">
+              <label className="text-sm font-medium text-zinc-700">
+                Minimal maosh
+                <input
+                  name="salary_min"
+                  type="number"
+                  min={0}
+                  step={1}
+                  className={fieldClass}
+                  placeholder="Ixtiyoriy"
+                />
+              </label>
+              <label className="text-sm font-medium text-zinc-700">
+                Maksimal maosh
+                <input
+                  name="salary_max"
+                  type="number"
+                  min={0}
+                  step={1}
+                  className={fieldClass}
+                  placeholder="Ixtiyoriy"
+                />
+              </label>
+              <label className="text-sm font-medium text-zinc-700">
+                Valyuta
+                <select name="salary_currency" defaultValue="UZS" className={fieldClass}>
+                  <option value="UZS">UZS</option>
+                  <option value="USD">USD</option>
+                </select>
+              </label>
+            </div>
             <label className="flex items-center gap-2 self-end pb-2.5 text-sm font-medium text-zinc-700">
               <input name="is_active" type="checkbox" defaultChecked className="size-4 accent-blue-600" />
               Faol
