@@ -5,6 +5,7 @@ import { Pencil } from 'lucide-react';
 import { safeHttpUrl } from '@/lib/applications';
 import { formatDate } from '@/lib/vacancies';
 import EditProfileModal, { type HrProfile } from './EditProfileModal';
+import AccountSection from './AccountSection';
 
 type Status = 'loading' | 'ok' | 'empty' | 'error';
 
@@ -48,6 +49,7 @@ export default function SettingsPage() {
   const [status, setStatus] = useState<Status>('loading');
   const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [username, setUsername] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -65,6 +67,10 @@ export default function SettingsPage() {
 
   useEffect(() => {
     void load();
+    fetch('/api/hr/account', { credentials: 'same-origin', cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { username?: string } | null) => d?.username && setUsername(d.username))
+      .catch(() => {});
   }, [load]);
 
   // Reload, then tell the header (DashboardShell) to refresh the company name and logo.
@@ -82,7 +88,7 @@ export default function SettingsPage() {
     <div className="mx-auto w-full max-w-[1600px] px-4 py-8">
       <header className="mb-6">
         <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Sozlamalar</h1>
-        <p className="text-sm text-zinc-500">Kompaniya profili va HR ma&apos;lumotlari.</p>
+        <p className="text-sm text-zinc-500">Kompaniya profili, login va parol.</p>
       </header>
 
       <div className="max-w-2xl">
@@ -159,6 +165,7 @@ export default function SettingsPage() {
             </dl>
           </section>
         )}
+        {username && <AccountSection username={username} onRenamed={setUsername} />}
       </div>
 
       {modalOpen && (
