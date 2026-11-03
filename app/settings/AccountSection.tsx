@@ -91,7 +91,7 @@ export default function AccountSection({ username, onRenamed }: { username: stri
   }
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className="space-y-6">
       <section className="rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
         <h2 className="flex items-center gap-2 text-base font-semibold text-zinc-900">
           <UserRound size={18} /> Username

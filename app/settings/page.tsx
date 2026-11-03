@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, Settings } from 'lucide-react';
 import { safeHttpUrl } from '@/lib/applications';
 import { formatDate } from '@/lib/vacancies';
 import EditProfileModal, { type HrProfile } from './EditProfileModal';
@@ -50,6 +50,7 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [username, setUsername] = useState('');
+  const [accountOpen, setAccountOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -84,14 +85,39 @@ export default function SettingsPage() {
     void load();
   };
 
+  const showAccountSection = accountOpen && Boolean(username);
+
+  const accountSettingsButton = (
+    <button
+      type="button"
+      onClick={() => setAccountOpen((open) => !open)}
+      aria-label="Hisob sozlamalari"
+      aria-expanded={accountOpen}
+      aria-controls="account-section"
+      title="Hisob sozlamalari"
+      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+    >
+      <Settings size={18} strokeWidth={1.5} />
+    </button>
+  );
+
   return (
     <div className="mx-auto w-full max-w-[1600px] px-4 py-8">
-      <header className="mb-6">
-        <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Sozlamalar</h1>
-        <p className="text-sm text-zinc-500">Kompaniya profili, login va parol.</p>
+      <header className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Sozlamalar</h1>
+          <p className="text-sm text-zinc-500">Kompaniya profili, login va parol.</p>
+        </div>
+        {status !== 'ok' && accountSettingsButton}
       </header>
 
-      <div className="max-w-2xl">
+      <div
+        className={`grid max-w-6xl grid-cols-1 gap-6 transition-[grid-template-columns] duration-300 ease-in-out motion-reduce:transition-none ${
+          showAccountSection
+            ? 'xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]'
+            : 'xl:grid-cols-[minmax(0,672px)_minmax(0,0fr)]'
+        }`}
+      >
         {status === 'loading' && (
           <div className="h-72 animate-pulse rounded-xl bg-black/5" aria-busy="true" />
         )}
@@ -127,45 +153,63 @@ export default function SettingsPage() {
         )}
 
         {status === 'ok' && profile && (
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex min-w-0 items-center gap-4">
-                <Logo key={profile.logo_url ?? profile.company_name ?? ''} name={profile.company_name ?? ''} url={profile.logo_url} />
-                <div className="min-w-0">
-                  <h2 className="break-words text-lg font-semibold tracking-tight text-zinc-900">
-                    {profile.company_name || 'Nomsiz kompaniya'}
-                  </h2>
-                  <p className="text-sm text-zinc-500">Kompaniya profili</p>
+          <div className="w-full max-w-2xl">
+            <section className="rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-4">
+                  <Logo key={profile.logo_url ?? profile.company_name ?? ''} name={profile.company_name ?? ''} url={profile.logo_url} />
+                  <div className="min-w-0">
+                    <h2 className="break-words text-lg font-semibold tracking-tight text-zinc-900">
+                      {profile.company_name || 'Nomsiz kompaniya'}
+                    </h2>
+                    <p className="text-sm text-zinc-500">Kompaniya profili</p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(true)}
+                    className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900"
+                  >
+                    <Pencil size={16} />
+                    Tahrirlash
+                  </button>
+                  {accountSettingsButton}
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setModalOpen(true)}
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900"
-              >
-                <Pencil size={16} />
-                Tahrirlash
-              </button>
-            </div>
 
-            <dl className="mt-5 divide-y divide-zinc-100 border-t border-zinc-100">
-              <Row label="Kompaniya nomi">{profile.company_name || empty}</Row>
-              <Row label="Xodimlar soni">{profile.employees ?? empty}</Row>
-              <Row label="HR ismi">{profile.hr_name || empty}</Row>
-              <Row label="HR telefoni">
-                {profile.hr_phone ? (
-                  <a className="text-blue-600 hover:underline" href={`tel:${profile.hr_phone.replace(/\s/g, '')}`}>
-                    {formatPhone(profile.hr_phone)}
-                  </a>
-                ) : (
-                  empty
-                )}
-              </Row>
-              <Row label="Yangilangan">{profile.updated_at ? formatDate(profile.updated_at) : empty}</Row>
-            </dl>
-          </section>
+              <dl className="mt-5 divide-y divide-zinc-100 border-t border-zinc-100">
+                <Row label="Kompaniya nomi">{profile.company_name || empty}</Row>
+                <Row label="Xodimlar soni">{profile.employees ?? empty}</Row>
+                <Row label="HR ismi">{profile.hr_name || empty}</Row>
+                <Row label="HR telefoni">
+                  {profile.hr_phone ? (
+                    <a className="text-blue-600 hover:underline" href={`tel:${profile.hr_phone.replace(/\s/g, '')}`}>
+                      {formatPhone(profile.hr_phone)}
+                    </a>
+                  ) : (
+                    empty
+                  )}
+                </Row>
+                <Row label="Yangilangan">{profile.updated_at ? formatDate(profile.updated_at) : empty}</Row>
+              </dl>
+            </section>
+          </div>
         )}
-        {username && <AccountSection username={username} onRenamed={setUsername} />}
+        <div
+          id="account-section"
+          aria-hidden={!showAccountSection}
+          inert={!showAccountSection}
+          className={`grid overflow-hidden transition-[grid-template-rows,opacity,transform] duration-300 ease-in-out motion-reduce:transition-none ${
+            showAccountSection
+              ? 'grid-rows-[1fr] translate-y-0 opacity-100'
+              : 'grid-rows-[0fr] -translate-y-2 opacity-0'
+          }`}
+        >
+          <div className="min-h-0 overflow-hidden">
+            {username && <AccountSection username={username} onRenamed={setUsername} />}
+          </div>
+        </div>
       </div>
 
       {modalOpen && (
