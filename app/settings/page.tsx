@@ -34,7 +34,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="grid grid-cols-[140px_1fr] gap-3 py-3 text-sm">
       <dt className="text-zinc-500">{label}</dt>
-      <dd className="min-w-0 break-words text-zinc-900">{children}</dd>
+      <dd className="min-w-0 wrap-break-word text-zinc-900">{children}</dd>
     </div>
   );
 }
@@ -102,7 +102,7 @@ export default function SettingsPage() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-4 py-8">
+    <div className="mx-auto w-full max-w-[1600px] px-4 py-2">
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Sozlamalar</h1>
@@ -159,7 +159,7 @@ export default function SettingsPage() {
                 <div className="flex min-w-0 items-center gap-4">
                   <Logo key={profile.logo_url ?? profile.company_name ?? ''} name={profile.company_name ?? ''} url={profile.logo_url} />
                   <div className="min-w-0">
-                    <h2 className="break-words text-lg font-semibold tracking-tight text-zinc-900">
+                    <h2 className="wrap-break-word text-lg font-semibold tracking-tight text-zinc-900">
                       {profile.company_name || 'Nomsiz kompaniya'}
                     </h2>
                     <p className="text-sm text-zinc-500">Kompaniya profili</p>

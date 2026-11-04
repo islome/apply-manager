@@ -300,12 +300,6 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link
-            href="/applicants"
-            className="inline-flex h-10 items-center rounded-lg border border-zinc-200 bg-white px-3.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900"
-          >
-            Arizalarni ko&apos;rish
-          </Link>
-          <Link
             href="/vacancies"
             className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
