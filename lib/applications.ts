@@ -59,6 +59,8 @@ type ApplicationRow = {
   status: string;
   created_at: string;
   updated_at: string;
+  /** 'candidate' when the candidate cancelled it from the Mini App (needs supabase/007) */
+  cancelled_by?: 'candidate' | 'hr' | null;
   candidate: Candidate | null;
   vacancy: VacancyRef | null;
 };

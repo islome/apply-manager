@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await sb
     .from('applications')
     .select(
-      `id, candidate_id, vacancy_id, status, created_at,
+      `*,
        candidate:candidates(id, telegram_id, username, language_code, photo_url, resume_path,
                             full_name, phone, age, major, experience_years, experience_text),
        vacancy:vacancies(id, title, major)`

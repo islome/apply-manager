@@ -49,6 +49,12 @@ export default function ApplicantCard({ a, dragging, onOpen, onDragStart, onDrag
         </div>
       </div>
 
+      {a.status === 'cancel' && a.cancelled_by === 'candidate' && (
+        <p className="rounded-md bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700">
+          Nomzod o&apos;zi bekor qildi
+        </p>
+      )}
+
       <p className="flex items-start gap-2 text-sm text-zinc-600">
         <BriefcaseIcon className="mt-1 h-3.5 w-3.5 shrink-0 text-zinc-500" />
         <span className="min-w-0">

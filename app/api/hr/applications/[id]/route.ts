@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   // Oldingi status va nomzod (xabar faqat status haqiqatan o'zgarsa yuboriladi)
   const { data: before, error: beforeError } = await db
     .from('applications')
-    .select('status, candidate:candidates(telegram_id, full_name), vacancy:vacancies(title, hr_user_id)')
+    .select('*, candidate:candidates(telegram_id, full_name), vacancy:vacancies(title, hr_user_id)')
     .eq('id', id)
     .single();
   if (beforeError) return dbFail(beforeError);
@@ -36,9 +36,13 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   const owner = Array.isArray(before.vacancy) ? before.vacancy[0] : before.vacancy;
   if (!owner || owner.hr_user_id !== auth.hr.id) return fail(404, 'Not found');
 
+  // cancelled_by exists only after supabase/007 was run; skip it until then
+  const patch: Record<string, unknown> = { status };
+  if ('cancelled_by' in before) patch.cancelled_by = status === 'cancel' ? 'hr' : null;
+
   const { data, error } = await db
     .from('applications')
-    .update({ status })
+    .update(patch)
     .eq('id', id)
     .select('id, status')
     .single();

@@ -134,7 +134,10 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
                   </span>
                 )}
               </Field>
-              <Field label="Stage">{stageById(a.status).label}</Field>
+              <Field label="Stage">
+                {stageById(a.status).label}
+                {a.status === 'cancel' && a.cancelled_by === 'candidate' ? " — nomzod o'zi bekor qildi" : ''}
+              </Field>
               <Field label="Age">{c?.age ? `${c.age} years old` : 'Not added'}</Field>
               <Field label="Experience">{experienceLabel(c?.experience_years)}</Field>
               <Field label="Language">{c?.language_code ? c.language_code.toUpperCase() : 'Not added'}</Field>
