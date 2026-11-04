@@ -290,7 +290,7 @@ export default function DashboardPage() {
   if (emptyActive.length) attention.push({ text: `${emptyActive.length} ta faol vakansiyaga hali ariza kelmagan`, href: "/vacancies" });
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-4 py-8">
+    <div className="mx-auto w-full max-w-[1600px] px-2 pb-6 ">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Bosh sahifa</h1>

@@ -166,7 +166,7 @@ export default function VacanciesPage() {
   const activeCount = vacancies.filter((v) => v.is_active).length;
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-4 py-8">
+    <div className="mx-auto w-full max-w-[1600px] px-2 py-2">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Vakansiyalar</h1>
