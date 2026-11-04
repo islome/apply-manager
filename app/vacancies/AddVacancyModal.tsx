@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { X } from 'lucide-react';
+import { CITIES, MAJORS } from '@/lib/vacancy-options';
 
 type Props = {
   onClose: () => void;
@@ -107,11 +108,27 @@ export default function AddVacancyModal({ onClose, onCreated }: Props) {
             </label>
             <label className="text-sm font-medium text-zinc-700">
               Shahar
-              <input name="city" required maxLength={80} className={fieldClass} />
+              <select name="city" required defaultValue="" className={fieldClass}>
+                <option value="" disabled>Tanlang</option>
+                
+                {CITIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="text-sm font-medium text-zinc-700">
               Yo'nalish
-              <input name="major" required maxLength={100} className={fieldClass} />
+              <select name="major" required defaultValue="" className={fieldClass}>
+                <option value="" disabled>Tanlang</option>
+                
+                {MAJORS.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="text-sm font-medium text-zinc-700">
               Bandlik turi

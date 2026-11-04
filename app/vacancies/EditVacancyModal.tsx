@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { X } from 'lucide-react';
 import type { Vacancy } from '@/lib/vacancies';
+import { CITIES, MAJORS } from '@/lib/vacancy-options';
 
 type Props = {
   vacancy: Vacancy;
@@ -109,11 +110,27 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
             </label>
             <label className="text-sm font-medium text-zinc-700">
               Shahar
-              <input name="city" required maxLength={80} defaultValue={vacancy.city} className={fieldClass} />
+              <select name="city" required defaultValue={vacancy.city} className={fieldClass}>
+                
+                {!CITIES.includes(vacancy.city) && <option value={vacancy.city}>{vacancy.city}</option>}
+                {CITIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="text-sm font-medium text-zinc-700">
               Yo'nalish
-              <input name="major" required maxLength={100} defaultValue={vacancy.major} className={fieldClass} />
+              <select name="major" required defaultValue={vacancy.major} className={fieldClass}>
+                
+                {!MAJORS.some((m) => m.value === vacancy.major) && <option value={vacancy.major}>{vacancy.major}</option>}
+                {MAJORS.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="text-sm font-medium text-zinc-700">
               Bandlik turi
