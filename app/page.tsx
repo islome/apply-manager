@@ -134,7 +134,7 @@ function KpiCard({
   icon: typeof Inbox;
   loading: boolean;
 }) {
-  if (loading) return <div className="h-[116px] animate-pulse rounded-xl bg-black/5" />;
+  if (loading) return <div className="h-29 animate-pulse rounded-xl bg-black/5" />;
   return (
     <article className="rounded-xl border border-zinc-200 bg-white p-4">
       <div className="flex items-center justify-between gap-2">
@@ -448,7 +448,7 @@ export default function DashboardPage() {
 
             {ready && recent.length > 0 && (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[620px] border-collapse text-left">
+                <table className="w-full min-w-155 border-collapse text-left">
                   <thead>
                     <tr className="border-y border-zinc-100 text-xs font-medium text-zinc-500">
                       <th className="px-5 py-2.5 font-medium">{t("dash.recent.candidate")}</th>

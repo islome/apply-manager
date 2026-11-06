@@ -179,7 +179,7 @@ export default function ApplicantsBoard() {
 
       {/* toolbar */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <label className="relative min-w-[220px] flex-1">
+        <label className="relative min-w-55 flex-1">
           <span className="sr-only">{t("app.searchLabel")}</span>
           <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <input
@@ -195,7 +195,7 @@ export default function ApplicantsBoard() {
           value={vacancyId}
           onChange={(e) => setVacancyId(e.target.value)}
           aria-label={t("app.filterVacancy")}
-          className="h-10 max-w-[260px] rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          className="h-10 max-w-65 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         >
           <option value="all">{t("app.allVacancies")}</option>
           {vacancies.map((v) => (
@@ -282,7 +282,7 @@ export default function ApplicantsBoard() {
           {STAGES.map((s) => (
             <div
               key={s.id}
-              className="h-[220px] animate-pulse rounded-xl bg-black/5"
+              className="h-55 animate-pulse rounded-xl bg-black/5"
             />
           ))}
         </div>
@@ -340,8 +340,8 @@ export default function ApplicantsBoard() {
               <section
                 key={s.id}
                 aria-labelledby={`stage-${s.id}`}
-                className={`flex min-h-[160px] flex-col rounded-xl p-2.5 transition-colors ${
-                  over ? "bg-blue-50 ring-1 ring-blue-300" : "bg-black/[0.04]"
+                className={`flex min-h-40 flex-col rounded-xl p-2.5 transition-colors ${
+                  over ? "bg-blue-50 ring-1 ring-blue-300" : "bg-black/4"
                 }`}
                 onDragOver={(e) => {
                   e.preventDefault();

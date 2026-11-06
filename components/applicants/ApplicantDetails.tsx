@@ -28,7 +28,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="grid grid-cols-[110px_1fr] gap-3 py-2.5 text-sm">
       <dt className="text-zinc-500">{label}</dt>
-      <dd className="min-w-0 break-words text-zinc-900">{children}</dd>
+      <dd className="min-w-0 wrap-break-word text-zinc-900">{children}</dd>
     </div>
   );
 }
@@ -92,7 +92,7 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
             <div className="flex items-center gap-4 py-5">
               <Avatar key={c?.photo_url ?? name} name={name} url={c?.photo_url} className="h-14 w-14 text-base" />
               <div className="min-w-0">
-                <h3 id="applicant-title" className="break-words text-lg font-semibold tracking-tight text-zinc-900">
+                <h3 id="applicant-title" className="wrap-break-word text-lg font-semibold tracking-tight text-zinc-900">
                   {name}
                 </h3>
                 <p className="text-sm text-zinc-500">{c?.major ? majorLabel(c.major, t) : t('app.noMajor')}</p>

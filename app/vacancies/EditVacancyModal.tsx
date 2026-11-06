@@ -2,8 +2,9 @@
 
 import { useState, type FormEvent } from 'react';
 import { X } from 'lucide-react';
+import { useT } from '@/i18n/LanguageProvider';
 import type { Vacancy } from '@/lib/vacancies';
-import { CITIES, MAJORS } from '@/lib/vacancy-options';
+import { cityLabel, CITIES, majorLabel, MAJORS } from '@/lib/vacancy-options';
 
 type Props = {
   vacancy: Vacancy;
@@ -15,6 +16,7 @@ const fieldClass =
   'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
 
 export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -52,14 +54,14 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
         const result = (await response.json().catch(() => null)) as
           | { error?: string }
           | null;
-        setError(result?.error ?? `Vakansiyani yangilab bo'lmadi (${response.status})`);
+        setError(result?.error ?? t('vac.updateFailed', { status: response.status }));
         return;
       }
 
       await onUpdated();
       onClose();
     } catch {
-      setError("Tarmoq xatosi — ulanishni tekshirib, qayta urinib ko'ring.");
+      setError(t('common.networkError'));
     } finally {
       setBusy(false);
     }
@@ -81,13 +83,13 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 id="edit-vacancy-title" className="text-lg font-semibold text-zinc-900">
-              Vakansiyani tahrirlash
+              {t('vac.editTitle')}
             </h2>
-            <p className="mt-1 text-sm text-zinc-500">Vakansiya ma'lumotlarini yangilang.</p>
+            <p className="mt-1 text-sm text-zinc-500">{t('vac.editHint')}</p>
           </div>
           <button
             type="button"
-            aria-label="Yopish"
+            aria-label={t('common.close')}
             disabled={busy}
             onClick={onClose}
             className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-50"
@@ -105,43 +107,43 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-medium text-zinc-700">
-              Lavozim nomi
+              {t('vac.fieldTitle')}
               <input name="title" required minLength={2} maxLength={120} defaultValue={vacancy.title} className={fieldClass} />
             </label>
             <label className="text-sm font-medium text-zinc-700">
-              Shahar
+              {t('vac.fieldCity')}
               <select name="city" required defaultValue={vacancy.city} className={fieldClass}>
                 {!CITIES.includes(vacancy.city) && <option value={vacancy.city}>{vacancy.city}</option>}
                 {CITIES.map((c) => (
                   <option key={c} value={c}>
-                    {c}
+                    {cityLabel(c, t)}
                   </option>
                 ))}
               </select>
             </label>
             <label className="text-sm font-medium text-zinc-700">
-              Yo'nalish
+              {t('vac.fieldMajor')}
               <select name="major" required defaultValue={vacancy.major} className={fieldClass}>
                 {!MAJORS.includes(vacancy.major) && <option value={vacancy.major}>{vacancy.major}</option>}
                 {MAJORS.map((m) => (
                   <option key={m} value={m}>
-                    {m}
+                    {majorLabel(m, t)}
                   </option>
                 ))}
               </select>
             </label>
             <label className="text-sm font-medium text-zinc-700">
-              Bandlik turi
+              {t('vac.fieldEmployment')}
               <select name="employment_type" defaultValue={vacancy.employment_type} className={fieldClass}>
-                <option value="full_time">To'liq kun</option>
-                <option value="part_time">Yarim kun</option>
-                <option value="remote">Masofaviy</option>
-                <option value="internship">Amaliyot</option>
+                <option value="full_time">{t('employment.full_time')}</option>
+                <option value="part_time">{t('employment.part_time')}</option>
+                <option value="remote">{t('employment.remote')}</option>
+                <option value="internship">{t('employment.internship')}</option>
               </select>
             </label>
             <div className="grid gap-4 sm:col-span-2 sm:grid-cols-3">
               <label className="text-sm font-medium text-zinc-700">
-                Minimal maosh
+                {t('vac.salaryMin')}
                 <input
                   name="salary_min"
                   type="number"
@@ -149,11 +151,11 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
                   step={1}
                   defaultValue={vacancy.salary_min ?? ''}
                   className={fieldClass}
-                  placeholder="Ixtiyoriy"
+                  placeholder={t('vac.optional')}
                 />
               </label>
               <label className="text-sm font-medium text-zinc-700">
-                Maksimal maosh
+                {t('vac.salaryMax')}
                 <input
                   name="salary_max"
                   type="number"
@@ -161,11 +163,11 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
                   step={1}
                   defaultValue={vacancy.salary_max ?? ''}
                   className={fieldClass}
-                  placeholder="Ixtiyoriy"
+                  placeholder={t('vac.optional')}
                 />
               </label>
               <label className="text-sm font-medium text-zinc-700">
-                Valyuta
+                {t('vac.currency')}
                 <select name="salary_currency" defaultValue={vacancy.salary_currency} className={fieldClass}>
                   <option value="UZS">UZS</option>
                   <option value="USD">USD</option>
@@ -174,12 +176,12 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
             </div>
             <label className="flex items-center gap-2 self-end pb-2.5 text-sm font-medium text-zinc-700">
               <input name="is_active" type="checkbox" defaultChecked={vacancy.is_active} className="size-4 accent-blue-600" />
-              Faol
+              {t('vac.active')}
             </label>
           </div>
 
           <label className="block text-sm font-medium text-zinc-700">
-            Tavsif
+            {t('vac.description')}
             <textarea
               name="description"
               required
@@ -191,7 +193,7 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
           </label>
 
           <label className="block text-sm font-medium text-zinc-700">
-            Talablar
+            {t('vac.requirements')}
             <textarea
               name="requirements"
               maxLength={4000}
@@ -208,14 +210,14 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
               onClick={onClose}
               className="h-10 rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
             >
-              Bekor qilish
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={busy}
               className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {busy ? 'Saqlanmoqda…' : "O'zgarishlarni saqlash"}
+              {busy ? t('common.saving') : t('vac.submitEdit')}
             </button>
           </div>
         </form>

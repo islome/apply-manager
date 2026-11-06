@@ -21,7 +21,7 @@ export default function ApplicantList({ rows, onOpen, onMove }: Props) {
 
   return (
     <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
-      <div className="min-w-[1000px] divide-y divide-zinc-100">
+      <div className="min-w-250 divide-y divide-zinc-100">
         <div className={`grid ${COLS} gap-4 px-4 py-2.5 text-xs font-medium text-zinc-500`} aria-hidden="true">
           <span>{t('app.colCandidate')}</span>
           <span>{t('app.colVacancy')}</span>

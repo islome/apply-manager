@@ -160,7 +160,7 @@ function DashboardHeader({
           <Link
             href="/settings"
             title={t("shell.companyProfile")}
-            className="flex h-9 max-w-[200px] items-center gap-2 rounded-lg px-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+            className="flex h-9 max-w-50 items-center gap-2 rounded-lg px-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
           >
             <CompanyAvatar key={company.logoUrl ?? company.name} name={company.name} logoUrl={company.logoUrl} />
             <span className="hidden truncate sm:inline">{company.name}</span>
@@ -448,14 +448,14 @@ export default function DashboardShell({
               transition-[width,opacity,margin] duration-300 ease-in-out
               ${
                 sidebarOpen
-                  ? "w-[228px] opacity-100"
+                  ? "w-57 opacity-100"
                   : "pointer-events-none -ml-4 w-0 opacity-0"
               }
             `}
           >
             <div
               className={`
-                sticky top-4 h-[calc(100vh-104px)] min-h-[400px]
+                sticky top-4 h-[calc(100vh-104px)] min-h-100
                 transition-transform duration-300 ease-in-out
                 ${sidebarOpen ? "translate-x-0" : "-translate-x-4"}
               `}
@@ -495,7 +495,7 @@ export default function DashboardShell({
                 absolute bottom-3 left-3 top-3
                 w-[min(290px,calc(100vw-24px))]
                 transition-transform duration-300 ease-in-out
-                ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-[110%]"}
+                ${mobileSidebarOpen ? "translate-x-0" : "translate-x-[-110%]"}
               `}
             >
               <div className="mb-3 flex h-12 items-center justify-between rounded-xl border border-zinc-200 bg-white px-4">

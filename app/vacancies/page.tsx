@@ -5,6 +5,7 @@ import { Pencil, Plus, Power, Trash2 } from 'lucide-react';
 import { useVacancies } from '@/hooks/useVacancies';
 import { useLanguage } from '@/i18n/LanguageProvider';
 import { employmentLabel, formatDate, salaryLabel, type Vacancy } from '@/lib/vacancies';
+import { cityLabel, majorLabel } from '@/lib/vacancy-options';
 import NotFoundAnimation from '../NotFoundAnimation';
 import EmptyBoxAnimation from '../EmptyBoxAnimation';
 import AddVacancyModal from './AddVacancyModal';
@@ -12,11 +13,7 @@ import EditVacancyModal from './EditVacancyModal';
 
 type Filter = 'all' | 'active' | 'inactive';
 
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: 'all', label: 'Hammasi' },
-  { id: 'active', label: 'Faol' },
-  { id: 'inactive', label: 'Nofaol' },
-];
+const FILTERS: Filter[] = ['all', 'active', 'inactive'];
 
 const iconButton =
   'grid h-8 w-8 place-items-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 disabled:opacity-50';
@@ -55,33 +52,33 @@ function VacancyCard({
           }`}
         >
           <span className={`h-1.5 w-1.5 rounded-full ${v.is_active ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
-          {v.is_active ? 'Faol' : 'Nofaol'}
+          {v.is_active ? t('vac.active') : t('vac.inactive')}
         </span>
       </div>
 
       <div className="space-y-0.5">
         <p className="text-sm font-medium text-zinc-900">{salaryLabel(v, t)}</p>
         <p className="text-sm text-zinc-500">
-          {v.company} · {v.city}
+          {v.company} · {cityLabel(v.city, t)}
         </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">{employmentLabel(v.employment_type, t)}</span>
-        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">{v.major}</span>
-        <span className="px-1 text-xs font-medium text-blue-600">{v.applications_count} ta ariza</span>
+        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">{majorLabel(v.major, t)}</span>
+        <span className="px-1 text-xs font-medium text-blue-600">{t('vac.applications', { n: v.applications_count })}</span>
       </div>
 
       <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-3">
         <span className="text-xs text-zinc-500">{formatDate(v.created_at, lang)}</span>
-        <div className="-mr-1.5 flex items-center gap-0.5" role="group" aria-label={`${v.title}: amallar`}>
+        <div className="-mr-1.5 flex items-center gap-0.5" role="group" aria-label={t('vac.actionsAria', { title: v.title })}>
           <button
             type="button"
             onClick={onToggle}
             disabled={busy}
             aria-pressed={v.is_active}
-            aria-label={v.is_active ? 'Nofaol qilish' : 'Faollashtirish'}
-            title={v.is_active ? 'Nofaol qilish' : 'Faollashtirish'}
+            aria-label={v.is_active ? t('vac.deactivate') : t('vac.activate')}
+            title={v.is_active ? t('vac.deactivate') : t('vac.activate')}
             className={`${iconButton} ${v.is_active ? iconOn : iconNeutral}`}
           >
             <Power size={16} />
@@ -90,8 +87,8 @@ function VacancyCard({
             type="button"
             onClick={onEdit}
             disabled={busy}
-            aria-label="Tahrirlash"
-            title="Tahrirlash"
+            aria-label={t('common.edit')}
+            title={t('common.edit')}
             className={`${iconButton} ${iconNeutral}`}
           >
             <Pencil size={16} />
@@ -100,8 +97,8 @@ function VacancyCard({
             type="button"
             onClick={onDelete}
             disabled={busy}
-            aria-label="O'chirish"
-            title="O'chirish"
+            aria-label={t('common.delete')}
+            title={t('common.delete')}
             className={`${iconButton} ${iconDanger}`}
           >
             <Trash2 size={16} />
@@ -113,6 +110,7 @@ function VacancyCard({
 }
 
 export default function VacanciesPage() {
+  const { t } = useLanguage();
   const { vacancies, state, error, retry, reload } = useVacancies();
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
@@ -135,14 +133,14 @@ export default function VacanciesPage() {
         const result = (await response.json().catch(() => null)) as { error?: string } | null;
         setActionError(
           result?.error ??
-            `Vakansiyani ${method === 'DELETE' ? "o'chirib" : 'yangilab'} bo'lmadi (${response.status})`,
+            t(method === 'DELETE' ? 'vac.deleteFailed' : 'vac.updateFailed', { status: response.status }),
         );
         return false;
       }
       await reload();
       return true;
     } catch {
-      setActionError("Tarmoq xatosi — ulanishni tekshirib, qayta urinib ko'ring.");
+      setActionError(t('common.networkError'));
       return false;
     } finally {
       setBusyVacancyId(null);
@@ -151,7 +149,7 @@ export default function VacanciesPage() {
 
   async function deleteVacancy(vacancy: Vacancy) {
     const confirmed = window.confirm(
-      `"${vacancy.title}" o'chirilsinmi? Unga tegishli arizalar ham o'chiriladi.`,
+      t('vac.confirmDelete', { title: vacancy.title }),
     );
     if (!confirmed) return;
     await updateVacancy(vacancy, 'DELETE');
@@ -172,12 +170,12 @@ export default function VacanciesPage() {
     <div className="mx-auto w-full max-w-[1600px] px-2 py-2">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Vakansiyalar</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">{t('vac.title')}</h1>
           <p className="text-sm text-zinc-500">
             {state === 'ok'
               ? vacancies.length
-                ? `${vacancies.length} ta vakansiya · ${activeCount} tasi faol`
-                : "Hali vakansiya qo'shilmagan"
+                ? t('vac.summary', { total: vacancies.length, active: activeCount })
+                : t('vac.none')
               : ' '}
           </p>
         </div>
@@ -187,7 +185,7 @@ export default function VacanciesPage() {
           className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
         >
           <Plus size={16} />
-          Vakansiya qo&apos;shish
+          {t('vac.add')}
         </button>
       </header>
 
@@ -197,22 +195,22 @@ export default function VacanciesPage() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Nomi, shahar yoki yo'nalish bo'yicha qidirish"
-            aria-label="Vakansiyalarni qidirish"
+            placeholder={t('vac.searchPlaceholder')}
+            aria-label={t('vac.searchLabel')}
             className="h-10 min-w-55 flex-1 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
-          <div className="flex h-10 items-center gap-0.5 rounded-lg bg-black/5 p-1" role="group" aria-label="Holat">
+          <div className="flex h-10 items-center gap-0.5 rounded-lg bg-black/5 p-1" role="group" aria-label={t('vac.statusGroup')}>
             {FILTERS.map((f) => (
               <button
-                key={f.id}
+                key={f}
                 type="button"
-                onClick={() => setFilter(f.id)}
-                aria-pressed={filter === f.id}
+                onClick={() => setFilter(f)}
+                aria-pressed={filter === f}
                 className={`h-8 rounded-md px-3 text-sm font-medium transition-colors ${
-                  filter === f.id ? 'bg-white text-zinc-900 ring-1 ring-zinc-200' : 'text-zinc-600 hover:text-zinc-900'
+                  filter === f ? 'bg-white text-zinc-900 ring-1 ring-zinc-200' : 'text-zinc-600 hover:text-zinc-900'
                 }`}
               >
-                {f.label}
+                {f === 'all' ? t('common.all') : f === 'active' ? t('vac.active') : t('vac.inactive')}
               </button>
             ))}
           </div>
@@ -230,14 +228,14 @@ export default function VacanciesPage() {
       {state === 'error' && (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
           <NotFoundAnimation />
-          <h2 className="text-base font-semibold text-zinc-900">Vakansiyalarni yuklab bo&apos;lmadi</h2>
+          <h2 className="text-base font-semibold text-zinc-900">{t('vac.loadFailed')}</h2>
           <p className="max-w-sm text-sm text-zinc-600">{error}</p>
           <button
             type="button"
             onClick={retry}
             className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
           >
-            Qayta urinish
+            {t('common.retry')}
           </button>
         </div>
       )}
@@ -251,15 +249,15 @@ export default function VacanciesPage() {
       {state === 'ok' && vacancies.length === 0 && (
         <div className="rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
           <EmptyBoxAnimation />
-          <h2 className="text-base font-semibold text-zinc-900">Hali vakansiya yo&apos;q</h2>
-          <p className="mt-1 text-sm text-zinc-600">Birinchi vakansiyangizni qo&apos;shing, u shu yerda chiqadi.</p>
+          <h2 className="text-base font-semibold text-zinc-900">{t('vac.emptyTitle')}</h2>
+          <p className="mt-1 text-sm text-zinc-600">{t('vac.emptyHint')}</p>
         </div>
       )}
 
       {state === 'ok' && vacancies.length > 0 && visible.length === 0 && (
         <div className="py-6 text-center text-sm text-zinc-500">
           <EmptyBoxAnimation />
-          <p>Hech narsa topilmadi.</p>
+          <p>{t('vac.notFound')}</p>
         </div>
       )}
 
