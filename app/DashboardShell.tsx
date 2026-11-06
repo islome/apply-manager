@@ -92,13 +92,17 @@ const ghostButton =
 
 function DashboardHeader({
   sidebarOpen,
+  mobileSidebarOpen,
   onToggleSidebar,
+  onToggleMobileSidebar,
   company,
   onLogout,
   loggingOut,
 }: {
   sidebarOpen: boolean;
+  mobileSidebarOpen: boolean;
   onToggleSidebar: () => void;
+  onToggleMobileSidebar: () => void;
   company: CompanyState;
   onLogout: () => void;
   loggingOut: boolean;
@@ -110,10 +114,23 @@ function DashboardHeader({
       <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         <button
           type="button"
+          onClick={onToggleMobileSidebar}
+          aria-label={mobileSidebarOpen ? t("shell.sidebar.close") : t("shell.sidebar.open")}
+          aria-expanded={mobileSidebarOpen}
+          className={`${ghostButton} w-9 shrink-0 lg:hidden`}
+        >
+          {mobileSidebarOpen ? (
+            <PanelLeft size={18} strokeWidth={1.5} />
+          ) : (
+            <Menu size={18} strokeWidth={1.5} />
+          )}
+        </button>
+        <button
+          type="button"
           onClick={onToggleSidebar}
           aria-label={sidebarOpen ? t("shell.sidebar.close") : t("shell.sidebar.open")}
           aria-expanded={sidebarOpen}
-          className={`${ghostButton} w-9 shrink-0`}
+          className={`${ghostButton} hidden w-9 shrink-0 lg:flex`}
         >
           {sidebarOpen ? (
             <PanelLeft size={18} strokeWidth={1.5} />
@@ -277,6 +294,7 @@ export default function DashboardShell({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const [applicantCount, setApplicantCount] = useState<number | null>(null);
@@ -404,7 +422,9 @@ export default function DashboardShell({
         {/* Global header */}
         <DashboardHeader
           sidebarOpen={sidebarOpen}
+          mobileSidebarOpen={mobileSidebarOpen}
           onToggleSidebar={() => setSidebarOpen((previous) => !previous)}
+          onToggleMobileSidebar={() => setMobileSidebarOpen((previous) => !previous)}
           company={company}
           onLogout={() => void handleLogout()}
           loggingOut={loggingOut}
@@ -449,22 +469,23 @@ export default function DashboardShell({
 
           {/* Mobile and tablet sidebar */}
           <div
-            aria-hidden={!sidebarOpen}
+            aria-hidden={!mobileSidebarOpen}
+            inert={!mobileSidebarOpen}
             className={`
               fixed inset-0 z-40 lg:hidden
-              ${sidebarOpen ? "pointer-events-auto" : "pointer-events-none"}
+              ${mobileSidebarOpen ? "pointer-events-auto" : "pointer-events-none"}
             `}
           >
             {/* Overlay */}
             <button
               type="button"
               aria-label={t("shell.nav.close")}
-              tabIndex={sidebarOpen ? 0 : -1}
-              onClick={() => setSidebarOpen(false)}
+              tabIndex={mobileSidebarOpen ? 0 : -1}
+              onClick={() => setMobileSidebarOpen(false)}
               className={`
                 absolute inset-0 bg-zinc-900/30
                 transition-opacity duration-300
-                ${sidebarOpen ? "opacity-100" : "opacity-0"}
+                ${mobileSidebarOpen ? "opacity-100" : "opacity-0"}
               `}
             />
 
@@ -474,7 +495,7 @@ export default function DashboardShell({
                 absolute bottom-3 left-3 top-3
                 w-[min(290px,calc(100vw-24px))]
                 transition-transform duration-300 ease-in-out
-                ${sidebarOpen ? "translate-x-0" : "-translate-x-[110%]"}
+                ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-[110%]"}
               `}
             >
               <div className="mb-3 flex h-12 items-center justify-between rounded-xl border border-zinc-200 bg-white px-4">
@@ -485,7 +506,7 @@ export default function DashboardShell({
                 <button
                   type="button"
                   aria-label={t("shell.sidebar.close")}
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={() => setMobileSidebarOpen(false)}
                   className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
                 >
                   <X size={18} />
@@ -494,7 +515,7 @@ export default function DashboardShell({
 
               <div className="h-[calc(100%-60px)]">
                 <DashboardSidebar
-                  onNavigate={() => setSidebarOpen(false)}
+                  onNavigate={() => setMobileSidebarOpen(false)}
                   applicantCount={applicantCount}
                   applicantCountError={applicantCountError}
                 />

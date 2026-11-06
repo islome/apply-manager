@@ -110,7 +110,6 @@ export default function AddVacancyModal({ onClose, onCreated }: Props) {
               Shahar
               <select name="city" required defaultValue="" className={fieldClass}>
                 <option value="" disabled>Tanlang</option>
-                
                 {CITIES.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -122,10 +121,9 @@ export default function AddVacancyModal({ onClose, onCreated }: Props) {
               Yo'nalish
               <select name="major" required defaultValue="" className={fieldClass}>
                 <option value="" disabled>Tanlang</option>
-                
                 {MAJORS.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
+                  <option key={m} value={m}>
+                    {m}
                   </option>
                 ))}
               </select>

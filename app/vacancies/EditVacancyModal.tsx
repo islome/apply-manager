@@ -111,7 +111,6 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
             <label className="text-sm font-medium text-zinc-700">
               Shahar
               <select name="city" required defaultValue={vacancy.city} className={fieldClass}>
-                
                 {!CITIES.includes(vacancy.city) && <option value={vacancy.city}>{vacancy.city}</option>}
                 {CITIES.map((c) => (
                   <option key={c} value={c}>
@@ -123,11 +122,10 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
             <label className="text-sm font-medium text-zinc-700">
               Yo'nalish
               <select name="major" required defaultValue={vacancy.major} className={fieldClass}>
-                
-                {!MAJORS.some((m) => m.value === vacancy.major) && <option value={vacancy.major}>{vacancy.major}</option>}
+                {!MAJORS.includes(vacancy.major) && <option value={vacancy.major}>{vacancy.major}</option>}
                 {MAJORS.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
+                  <option key={m} value={m}>
+                    {m}
                   </option>
                 ))}
               </select>
