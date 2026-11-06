@@ -2,8 +2,10 @@
 
 import { useState, type FormEvent } from 'react';
 import { safeNext } from '@/lib/hr-redirect';
+import { useT } from '@/i18n/LanguageProvider';
 
 export default function LoginForm() {
+  const t = useT();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -15,7 +17,7 @@ export default function LoginForm() {
     if (busy) return;
     setError('');
     if (!username.trim() || !password) {
-      setError('Enter username and password');
+      setError(t('login.enterBoth'));
       return;
     }
 
@@ -34,7 +36,7 @@ export default function LoginForm() {
         window.location.assign(safeNext(next));
         return; // keep the button disabled while the browser navigates
       }
-      let msg = `${mode === 'login' ? 'Login' : 'Registration'} failed (${res.status})`;
+      let msg = t(mode === 'login' ? 'login.failed' : 'login.registerFailed', { status: res.status });
       try {
         const j = (await res.json()) as { error?: string };
         if (j?.error) msg = j.error;
@@ -43,7 +45,7 @@ export default function LoginForm() {
       }
       setError(msg);
     } catch {
-      setError('Network error — check your connection');
+      setError(t('common.networkError'));
     }
     setBusy(false);
   }
@@ -66,7 +68,7 @@ export default function LoginForm() {
             mode === 'login' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
           }`}
         >
-          Sign in
+          {t('login.signIn')}
         </button>
         <button
           type="button"
@@ -80,7 +82,7 @@ export default function LoginForm() {
             mode === 'register' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
           }`}
         >
-          Sign up
+          {t('login.signUp')}
         </button>
       </div>
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
@@ -92,7 +94,7 @@ export default function LoginForm() {
 
         <div>
           <label htmlFor="username" className="mb-2 block text-[13px] font-semibold text-slate-900">
-            Username
+            {t('login.username')}
           </label>
           <input
             id="username"
@@ -109,7 +111,7 @@ export default function LoginForm() {
 
         <div>
           <label htmlFor="password" className="mb-2 block text-[13px] font-semibold text-slate-900">
-            Password
+            {t('login.password')}
           </label>
           <input
             id="password"
@@ -121,7 +123,7 @@ export default function LoginForm() {
             className={inputClass}
           />
           {mode === 'register' && (
-            <p className="mt-1.5 text-xs text-slate-500">Use at least 8 characters.</p>
+            <p className="mt-1.5 text-xs text-slate-500">{t('login.passwordHint')}</p>
           )}
         </div>
 
@@ -131,8 +133,8 @@ export default function LoginForm() {
           className="mt-1 h-[46px] rounded-full bg-blue-600 font-semibold text-white shadow-md hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy
-            ? mode === 'login' ? 'Signing in…' : 'Creating account…'
-            : mode === 'login' ? 'Sign in' : 'Create account'}
+            ? t(mode === 'login' ? 'login.signingIn' : 'login.creating')
+            : t(mode === 'login' ? 'login.signIn' : 'login.create')}
         </button>
       </form>
     </>

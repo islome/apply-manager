@@ -2,12 +2,13 @@
 
 import { useMemo, useRef, useState, type DragEvent } from "react";
 import { useApplications } from "@/hooks/useApplications";
+import { useT } from "@/i18n/LanguageProvider";
 import {
   STAGES,
   applicationsToCsv,
   matchesSearch,
   personName,
-  stageById,
+  stageLabel,
   type Application,
   type StageId,
 } from "@/lib/applications";
@@ -23,6 +24,7 @@ type StageFilter = "all" | StageId;
 type View = "board" | "list";
 
 export default function ApplicantsBoard() {
+  const t = useT();
   const { applications, state, error, move, retry } = useApplications();
 
   const [search, setSearch] = useState("");
@@ -95,7 +97,7 @@ export default function ApplicantsBoard() {
     const a = applications.find((x) => x.id === id);
     if (!a) return;
     const res = await move(id, target);
-    if (res.ok) notify(`${personName(a)} moved to ${stageById(target).label}`);
+    if (res.ok) notify(t("app.movedTo", { name: personName(a), stage: stageLabel(target, t) }));
     else if (res.message) notify(res.message);
   }
 
@@ -128,7 +130,7 @@ export default function ApplicantsBoard() {
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    notify(`Downloaded ${listRows.length} applicants as CSV`);
+    notify(t("app.csvDone", { n: listRows.length }));
   }
 
   /* ---------------------------------------------------------------- render */
@@ -140,10 +142,10 @@ export default function ApplicantsBoard() {
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
-            Job Appliers
+            {t("app.title")}
           </h1>
           <p className="text-sm text-zinc-500">
-            Search, filter, and move candidates between hiring stages.
+            {t("app.subtitle")}
           </p>
         </div>
         <button
@@ -153,7 +155,7 @@ export default function ApplicantsBoard() {
           className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <DownloadIcon className="h-4 w-4" />
-          CSV
+          {t("app.csv")}
         </button>
       </header>
 
@@ -163,14 +165,14 @@ export default function ApplicantsBoard() {
           className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800"
         >
           <span>
-            Couldn&apos;t refresh ({error}). Showing the last loaded data.
+            {t("app.refreshFailed", { error: error ?? "" })}
           </span>
           <button
             type="button"
             onClick={retry}
             className="rounded-md px-2.5 py-1 font-medium hover:bg-amber-100"
           >
-            Retry
+            {t("common.retry")}
           </button>
         </div>
       )}
@@ -178,13 +180,13 @@ export default function ApplicantsBoard() {
       {/* toolbar */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <label className="relative min-w-[220px] flex-1">
-          <span className="sr-only">Search applicants</span>
+          <span className="sr-only">{t("app.searchLabel")}</span>
           <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, vacancy, major, phone or @username"
+            placeholder={t("app.searchPh")}
             className="h-10 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
         </label>
@@ -192,10 +194,10 @@ export default function ApplicantsBoard() {
         <select
           value={vacancyId}
           onChange={(e) => setVacancyId(e.target.value)}
-          aria-label="Filter by vacancy"
+          aria-label={t("app.filterVacancy")}
           className="h-10 max-w-[260px] rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         >
-          <option value="all">All vacancies</option>
+          <option value="all">{t("app.allVacancies")}</option>
           {vacancies.map((v) => (
             <option key={v.id} value={v.id}>
               {v.title}
@@ -206,7 +208,7 @@ export default function ApplicantsBoard() {
         <div
           className="flex h-10 items-center gap-0.5 rounded-lg bg-black/5 p-1"
           role="group"
-          aria-label="View"
+          aria-label={t("app.view")}
         >
           {(["board", "list"] as const).map((v) => (
             <button
@@ -220,7 +222,7 @@ export default function ApplicantsBoard() {
                   : "text-zinc-600 hover:text-zinc-900"
               }`}
             >
-              {v}
+              {v === "board" ? t("app.viewBoard") : t("app.viewList")}
             </button>
           ))}
         </div>
@@ -230,7 +232,7 @@ export default function ApplicantsBoard() {
       <div
         className="mb-5 flex flex-wrap gap-1"
         role="group"
-        aria-label="Filter by stage"
+        aria-label={t("app.filterStage")}
       >
         <button
           type="button"
@@ -242,7 +244,7 @@ export default function ApplicantsBoard() {
               : "text-zinc-600 hover:bg-black/5 hover:text-zinc-900"
           }`}
         >
-          All
+          {t("common.all")}
           <span className="text-xs tabular-nums text-zinc-500">
             {base.length}
           </span>
@@ -262,7 +264,7 @@ export default function ApplicantsBoard() {
               }`}
             >
               <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-              {s.label}
+              {stageLabel(s.id, t)}
               <span className="text-xs tabular-nums text-zinc-500">
                 {byStage[s.id].length}
               </span>
@@ -289,7 +291,7 @@ export default function ApplicantsBoard() {
       {state === "error" && (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
           <h2 className="text-base font-semibold text-zinc-900">
-            Couldn&apos;t load applicants
+            {t("app.loadFailed")}
           </h2>
           <p className="max-w-sm text-sm text-zinc-500">{error}</p>
           <button
@@ -297,7 +299,7 @@ export default function ApplicantsBoard() {
             onClick={retry}
             className="h-9 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
           >
-            Try again
+            {t("app.tryAgain")}
           </button>
         </div>
       )}
@@ -306,10 +308,10 @@ export default function ApplicantsBoard() {
         <div className="rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
           <EmptyBoxAnimation />
           <h2 className="text-base font-semibold text-zinc-900">
-            No applications yet
+            {t("app.noneTitle")}
           </h2>
           <p className="mt-1 text-sm text-zinc-600">
-            When candidates apply through the bot, they show up here.
+            {t("app.noneText")}
           </p>
         </div>
       )}
@@ -358,7 +360,7 @@ export default function ApplicantsBoard() {
                     className="flex items-center gap-2 text-sm font-medium text-zinc-900"
                   >
                     <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-                    {s.label}
+                    {stageLabel(s.id, t)}
                   </h2>
                   <span className="text-xs tabular-nums text-zinc-500">
                     {items.length}
@@ -380,8 +382,8 @@ export default function ApplicantsBoard() {
                   {items.length === 0 && (
                     <p className="grid flex-1 place-items-center rounded-lg border border-dashed border-zinc-300 px-3 py-6 text-center text-sm text-zinc-500">
                       {base.length === applications.length
-                        ? "Drop candidates here"
-                        : "No matches"}
+                        ? t("app.dropHere")
+                        : t("app.noMatches")}
                     </p>
                   )}
 
@@ -393,7 +395,7 @@ export default function ApplicantsBoard() {
                       }
                       className="shrink-0 rounded-lg py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
                     >
-                      Show more ({items.length - limit})
+                      {t("app.showMore", { n: items.length - limit })}
                     </button>
                   )}
                 </div>

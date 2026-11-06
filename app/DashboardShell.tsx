@@ -18,25 +18,28 @@ import {
 import Image from "next/image";
 
 import { safeHttpUrl } from "@/lib/applications";
+import { useT } from "@/i18n/LanguageProvider";
+import LanguageSwitcher from "@/i18n/LanguageSwitcher";
+import type { MessageKey } from "@/i18n/messages";
 
 const navigation = [
   {
-    label: "Bosh sahifa",
+    labelKey: "shell.nav.home" as MessageKey,
     href: "/",
     icon: LayoutDashboard,
   },
   {
-    label: "Vakansiyalar",
+    labelKey: "shell.nav.vacancies" as MessageKey,
     href: "/vacancies",
     icon: BriefcaseBusiness,
   },
   {
-    label: "Arizalar",
+    labelKey: "shell.nav.applicants" as MessageKey,
     href: "/applicants",
     icon: Users,
   },
   {
-    label: "Tahlil",
+    labelKey: "shell.nav.analytics" as MessageKey,
     href: "/analytics",
     icon: ChartColumn,
   },
@@ -100,6 +103,7 @@ function DashboardHeader({
   onLogout: () => void;
   loggingOut: boolean;
 }) {
+  const t = useT();
   return (
     <header className="relative z-30 flex h-14 items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 sm:px-4">
       {/* Left: toggle + logo */}
@@ -107,7 +111,7 @@ function DashboardHeader({
         <button
           type="button"
           onClick={onToggleSidebar}
-          aria-label={sidebarOpen ? "Yon panelni yopish" : "Yon panelni ochish"}
+          aria-label={sidebarOpen ? t("shell.sidebar.close") : t("shell.sidebar.open")}
           aria-expanded={sidebarOpen}
           className={`${ghostButton} w-9 shrink-0`}
         >
@@ -138,7 +142,7 @@ function DashboardHeader({
         {company.status === "ok" && (
           <Link
             href="/settings"
-            title="Kompaniya profili"
+            title={t("shell.companyProfile")}
             className="flex h-9 max-w-[200px] items-center gap-2 rounded-lg px-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
           >
             <CompanyAvatar key={company.logoUrl ?? company.name} name={company.name} logoUrl={company.logoUrl} />
@@ -152,10 +156,12 @@ function DashboardHeader({
             className="flex h-9 items-center gap-2 rounded-lg px-2.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
           >
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
-            <span className="hidden sm:inline">Profilni to&apos;ldiring</span>
-            <span className="sm:hidden">Profil</span>
+            <span className="hidden sm:inline">{t("shell.completeProfile")}</span>
+            <span className="sm:hidden">{t("shell.profileShort")}</span>
           </Link>
         )}
+
+        <LanguageSwitcher />
 
         <button
           type="button"
@@ -164,7 +170,7 @@ function DashboardHeader({
           className="flex h-9 items-center gap-2 rounded-lg border border-zinc-200 px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 disabled:opacity-60"
         >
           <LogOut size={16} strokeWidth={1.5} />
-          <span className="hidden sm:inline">{loggingOut ? "Chiqilmoqda…" : "Chiqish"}</span>
+          <span className="hidden sm:inline">{loggingOut ? t("shell.loggingOut") : t("shell.logout")}</span>
         </button>
       </div>
     </header>
@@ -180,6 +186,7 @@ function DashboardSidebar({
   applicantCount: number | null;
   applicantCountError: boolean;
 }) {
+  const t = useT();
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -200,7 +207,7 @@ function DashboardSidebar({
   return (
     <aside className="flex h-full min-h-0 w-full flex-col rounded-xl border border-zinc-200 bg-white p-3">
       <div className="px-3 pb-2 pt-1">
-        <p className="text-xs font-medium text-zinc-500">Menyu</p>
+        <p className="text-xs font-medium text-zinc-500">{t("shell.menu")}</p>
       </div>
 
       <nav className="flex flex-col gap-0.5">
@@ -222,11 +229,11 @@ function DashboardSidebar({
                 className={active ? "text-blue-600" : "text-zinc-500"}
               />
 
-              <span className="flex-1 whitespace-nowrap">{item.label}</span>
+              <span className="flex-1 whitespace-nowrap">{t(item.labelKey)}</span>
 
               {item.href === "/applicants" && applicantCountError && (
                 <span
-                  title="Arizalar sonini yuklab bo'lmadi"
+                  title={t("shell.countError")}
                   className="flex h-5 min-w-5 items-center justify-center rounded-md bg-amber-50 px-1.5 text-xs font-medium text-amber-700"
                 >
                   !
@@ -234,7 +241,7 @@ function DashboardSidebar({
               )}
               {item.href === "/applicants" && applicantCount !== null && (
                 <span
-                  aria-label={`${applicantCount} ta ariza`}
+                  aria-label={t("shell.countLabel", { n: applicantCount })}
                   className="flex h-5 min-w-5 items-center justify-center rounded-md bg-blue-50 px-1.5 text-xs font-medium tabular-nums text-blue-700"
                 >
                   {applicantCount}
@@ -257,7 +264,7 @@ function DashboardSidebar({
             strokeWidth={1.5}
             className={isActive("/settings") ? "text-blue-600" : "text-zinc-500"}
           />
-          <span>Sozlamalar</span>
+          <span>{t("shell.settings")}</span>
         </Link>
       </div>
     </aside>
@@ -276,6 +283,7 @@ export default function DashboardShell({
   const [applicantCountError, setApplicantCountError] = useState(false);
   const [company, setCompany] = useState<CompanyState>({ status: "loading" });
   const [loggingOut, setLoggingOut] = useState(false);
+  const t = useT();
   const [logoutError, setLogoutError] = useState("");
 
   useEffect(() => {
@@ -371,8 +379,10 @@ export default function DashboardShell({
 
       // Only after the server session is gone: wipe everything stored in this browser.
       try {
+        const savedLang = window.localStorage.getItem("jobbor.lang");
         window.localStorage.clear();
         window.sessionStorage.clear();
+        if (savedLang) window.localStorage.setItem("jobbor.lang", savedLang);
       } catch {
         // storage can be blocked (private mode); the server session is already closed
       }
@@ -381,7 +391,7 @@ export default function DashboardShell({
       router.refresh();
     } catch (error) {
       console.error("[dashboard] Logout failed", error);
-      setLogoutError("Chiqib bo'lmadi. Ulanishni tekshirib, qayta urinib ko'ring.");
+      setLogoutError(t("shell.logoutError"));
       setLoggingOut(false);
     }
   }
@@ -448,7 +458,7 @@ export default function DashboardShell({
             {/* Overlay */}
             <button
               type="button"
-              aria-label="Navigatsiyani yopish"
+              aria-label={t("shell.nav.close")}
               tabIndex={sidebarOpen ? 0 : -1}
               onClick={() => setSidebarOpen(false)}
               className={`
@@ -474,7 +484,7 @@ export default function DashboardShell({
 
                 <button
                   type="button"
-                  aria-label="Yon panelni yopish"
+                  aria-label={t("shell.sidebar.close")}
                   onClick={() => setSidebarOpen(false)}
                   className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
                 >

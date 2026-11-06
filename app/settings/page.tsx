@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Pencil, Settings } from 'lucide-react';
 import { safeHttpUrl } from '@/lib/applications';
 import { formatDate } from '@/lib/vacancies';
+import { useLanguage } from '@/i18n/LanguageProvider';
 import EditProfileModal, { type HrProfile } from './EditProfileModal';
 import AccountSection from './AccountSection';
 
@@ -39,50 +40,63 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-const empty = <span className="text-zinc-500">Kiritilmagan</span>;
-
 // +998901234567 -> +998 90 123 45 67 (display only)
 const formatPhone = (p: string) => p.replace(/^(\+998)(\d{2})(\d{3})(\d{2})(\d{2})$/, '$1 $2 $3 $4 $5');
 
 export default function SettingsPage() {
+  const { lang, t } = useLanguage();
+  const empty = <span className="text-zinc-500">{t('common.notSet')}</span>;
   const [profile, setProfile] = useState<HrProfile | null>(null);
   const [status, setStatus] = useState<Status>('loading');
-  const [error, setError] = useState('');
+  const [errorStatus, setErrorStatus] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [accountOpen, setAccountOpen] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const response = await fetch('/api/hr/profile', { credentials: 'same-origin', cache: 'no-store' });
-      if (!response.ok) throw new Error(`Profilni yuklab bo'lmadi (${response.status})`);
-      // the API answers 200 with null while this HR has not saved a profile yet
-      const data = (await response.json()) as HrProfile | null;
-      setProfile(data);
-      setStatus(data ? 'ok' : 'empty');
-    } catch (e) {
-      setError((e as Error).message || "Tarmoq xatosi — ulanishni tekshirib, qayta urinib ko'ring.");
-      setStatus('error');
-    }
-  }, []);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // setState only runs inside promise callbacks, never synchronously in the effect body.
+  // The error is kept as a status code (0 = network) and turned into text at render time.
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch('/api/hr/profile', { credentials: 'same-origin', cache: 'no-store', signal: ctrl.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          setErrorStatus(response.status);
+          setStatus('error');
+          return;
+        }
+        // the API answers 200 with null while this HR has not saved a profile yet
+        const data = (await response.json()) as HrProfile | null;
+        setProfile(data);
+        setStatus(data ? 'ok' : 'empty');
+      })
+      .catch((e: Error) => {
+        if (e.name === 'AbortError') return;
+        setErrorStatus(0);
+        setStatus('error');
+      });
+    return () => ctrl.abort();
+  }, [reloadKey]);
 
   useEffect(() => {
-    void load();
     fetch('/api/hr/account', { credentials: 'same-origin', cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { username?: string } | null) => d?.username && setUsername(d.username))
+      .then((d: { username?: string } | null) => {
+        if (d?.username) setUsername(d.username);
+      })
       .catch(() => {});
-  }, [load]);
+  }, []);
 
   // Reload, then tell the header (DashboardShell) to refresh the company name and logo.
   const onSaved = useCallback(async () => {
-    await load();
+    setReloadKey((k) => k + 1);
     window.dispatchEvent(new Event('company:updated'));
-  }, [load]);
+  }, []);
 
   const retry = () => {
     setStatus('loading');
-    void load();
+    setReloadKey((k) => k + 1);
   };
 
   const showAccountSection = accountOpen && Boolean(username);
@@ -91,10 +105,10 @@ export default function SettingsPage() {
     <button
       type="button"
       onClick={() => setAccountOpen((open) => !open)}
-      aria-label="Hisob sozlamalari"
+      aria-label={t('set.accountSettings')}
       aria-expanded={accountOpen}
       aria-controls="account-section"
-      title="Hisob sozlamalari"
+      title={t('set.accountSettings')}
       className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
     >
       <Settings size={18} strokeWidth={1.5} />
@@ -105,8 +119,8 @@ export default function SettingsPage() {
     <div className="mx-auto w-full max-w-[1600px] px-4 py-2">
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Sozlamalar</h1>
-          <p className="text-sm text-zinc-500">Kompaniya profili, login va parol.</p>
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">{t('set.title')}</h1>
+          <p className="text-sm text-zinc-500">{t('set.subtitle')}</p>
         </div>
         {status !== 'ok' && accountSettingsButton}
       </header>
@@ -124,30 +138,30 @@ export default function SettingsPage() {
 
         {status === 'error' && (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
-            <h2 className="text-base font-semibold text-zinc-900">Profilni yuklab bo&apos;lmadi</h2>
-            <p className="max-w-sm text-sm text-zinc-600">{error}</p>
+            <h2 className="text-base font-semibold text-zinc-900">{t('set.loadFailed')}</h2>
+            <p className="max-w-sm text-sm text-zinc-600">{errorStatus ? t('set.loadFailedStatus', { status: errorStatus }) : t('common.networkError')}</p>
             <button
               type="button"
               onClick={retry}
               className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
             >
-              Qayta urinish
+              {t('common.retry')}
             </button>
           </div>
         )}
 
         {status === 'empty' && (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
-            <h2 className="text-base font-semibold text-zinc-900">Profil to&apos;ldirilmagan</h2>
+            <h2 className="text-base font-semibold text-zinc-900">{t('set.emptyTitle')}</h2>
             <p className="max-w-sm text-sm text-zinc-600">
-              Kompaniya nomi va HR ma&apos;lumotlarini kiriting, ular sarlavhada ko&apos;rinadi.
+              {t('set.emptyText')}
             </p>
             <button
               type="button"
               onClick={() => setModalOpen(true)}
               className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
             >
-              Profilni to&apos;ldirish
+              {t('set.fillProfile')}
             </button>
           </div>
         )}
@@ -160,9 +174,9 @@ export default function SettingsPage() {
                   <Logo key={profile.logo_url ?? profile.company_name ?? ''} name={profile.company_name ?? ''} url={profile.logo_url} />
                   <div className="min-w-0">
                     <h2 className="wrap-break-word text-lg font-semibold tracking-tight text-zinc-900">
-                      {profile.company_name || 'Nomsiz kompaniya'}
+                      {profile.company_name || t('set.unnamed')}
                     </h2>
-                    <p className="text-sm text-zinc-500">Kompaniya profili</p>
+                    <p className="text-sm text-zinc-500">{t('set.companyProfile')}</p>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -172,17 +186,17 @@ export default function SettingsPage() {
                     className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900"
                   >
                     <Pencil size={16} />
-                    Tahrirlash
+                    {t('common.edit')}
                   </button>
                   {accountSettingsButton}
                 </div>
               </div>
 
               <dl className="mt-5 divide-y divide-zinc-100 border-t border-zinc-100">
-                <Row label="Kompaniya nomi">{profile.company_name || empty}</Row>
-                <Row label="Xodimlar soni">{profile.employees ?? empty}</Row>
-                <Row label="HR ismi">{profile.hr_name || empty}</Row>
-                <Row label="HR telefoni">
+                <Row label={t('set.companyName')}>{profile.company_name || empty}</Row>
+                <Row label={t('set.employees')}>{profile.employees ?? empty}</Row>
+                <Row label={t('set.hrName')}>{profile.hr_name || empty}</Row>
+                <Row label={t('set.hrPhone')}>
                   {profile.hr_phone ? (
                     <a className="text-blue-600 hover:underline" href={`tel:${profile.hr_phone.replace(/\s/g, '')}`}>
                       {formatPhone(profile.hr_phone)}
@@ -191,7 +205,7 @@ export default function SettingsPage() {
                     empty
                   )}
                 </Row>
-                <Row label="Yangilangan">{profile.updated_at ? formatDate(profile.updated_at) : empty}</Row>
+                <Row label={t('set.updated')}>{profile.updated_at ? formatDate(profile.updated_at, lang) : empty}</Row>
               </dl>
             </section>
           </div>

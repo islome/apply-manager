@@ -1,0 +1,52 @@
+import type { Dict } from '../types';
+
+const uz = {
+  'login.title': 'HR akkaunti',
+  'login.subtitle': 'Vakansiya va nomzodlarni boshqarish uchun kiring yoki akkaunt yarating.',
+  'login.signIn': 'Kirish',
+  'login.signUp': "Ro'yxatdan o'tish",
+  'login.username': 'Username',
+  'login.password': 'Parol',
+  'login.passwordHint': 'Kamida 8 ta belgi kiriting.',
+  'login.enterBoth': 'Username va parolni kiriting',
+  'login.failed': 'Kirish amalga oshmadi ({status})',
+  'login.registerFailed': "Ro'yxatdan o'tib bo'lmadi ({status})",
+  'login.signingIn': 'Kirilmoqda…',
+  'login.creating': 'Akkaunt yaratilmoqda…',
+  'login.create': 'Akkaunt yaratish',
+} as const;
+
+const en: Dict<typeof uz> = {
+  'login.title': 'HR account',
+  'login.subtitle': 'Sign in or create an account to manage vacancies and candidates.',
+  'login.signIn': 'Sign in',
+  'login.signUp': 'Sign up',
+  'login.username': 'Username',
+  'login.password': 'Password',
+  'login.passwordHint': 'Use at least 8 characters.',
+  'login.enterBoth': 'Enter username and password',
+  'login.failed': 'Login failed ({status})',
+  'login.registerFailed': 'Registration failed ({status})',
+  'login.signingIn': 'Signing in…',
+  'login.creating': 'Creating account…',
+  'login.create': 'Create account',
+};
+
+const ru: Dict<typeof uz> = {
+  'login.title': 'HR-аккаунт',
+  'login.subtitle': 'Войдите или создайте аккаунт, чтобы управлять вакансиями и кандидатами.',
+  'login.signIn': 'Войти',
+  'login.signUp': 'Регистрация',
+  'login.username': 'Имя пользователя',
+  'login.password': 'Пароль',
+  'login.passwordHint': 'Не менее 8 символов.',
+  'login.enterBoth': 'Введите имя пользователя и пароль',
+  'login.failed': 'Не удалось войти ({status})',
+  'login.registerFailed': 'Не удалось зарегистрироваться ({status})',
+  'login.signingIn': 'Вход…',
+  'login.creating': 'Создание аккаунта…',
+  'login.create': 'Создать аккаунт',
+};
+
+const messages = { uz, en, ru };
+export default messages;

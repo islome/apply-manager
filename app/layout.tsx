@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import DashboardShell from "./DashboardShell";
+import { LanguageProvider } from "@/i18n/LanguageProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,18 +15,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JobBor | HR Dashboard",
+  title: "JobBor | HR ",
   description: "JobBor recruitment management dashboard",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="uz"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <DashboardShell>{children}</DashboardShell>
+        <LanguageProvider>
+          <DashboardShell>{children}</DashboardShell>
+        </LanguageProvider>
       </body>
     </html>
   );

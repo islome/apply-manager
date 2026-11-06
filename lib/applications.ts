@@ -2,16 +2,18 @@
 // Source: GET /api/hr/applications = `applications` rows with the candidate and vacancy embedded.
 
 import { ApiError, apiJson } from './api-client';
+import type { TFunction } from '@/i18n/LanguageProvider';
+import type { MessageKey } from '@/i18n/messages';
 
 /* ------------------------------------------------------------------ stages */
 
 // Tailwind needs complete class names in the source, so each stage spells out its own.
 export const STAGES = [
-  { id: 'new', label: 'New', dot: 'bg-blue-500', bar: 'border-t-blue-500', soft: 'bg-blue-50', text: 'text-blue-700', ring: 'ring-blue-200' },
-  { id: 'confirmed', label: 'Confirmed', dot: 'bg-violet-500', bar: 'border-t-violet-500', soft: 'bg-violet-50', text: 'text-violet-700', ring: 'ring-violet-200' },
-  { id: 'interview', label: 'Interview', dot: 'bg-amber-500', bar: 'border-t-amber-500', soft: 'bg-amber-50', text: 'text-amber-700', ring: 'ring-amber-200' },
-  { id: 'hired', label: 'Hired', dot: 'bg-emerald-500', bar: 'border-t-emerald-500', soft: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
-  { id: 'cancel', label: 'Cancel', dot: 'bg-rose-500', bar: 'border-t-rose-500', soft: 'bg-rose-50', text: 'text-rose-700', ring: 'ring-rose-200' },
+  { id: 'new', dot: 'bg-blue-500', bar: 'border-t-blue-500', soft: 'bg-blue-50', text: 'text-blue-700', ring: 'ring-blue-200' },
+  { id: 'confirmed', dot: 'bg-violet-500', bar: 'border-t-violet-500', soft: 'bg-violet-50', text: 'text-violet-700', ring: 'ring-violet-200' },
+  { id: 'interview', dot: 'bg-amber-500', bar: 'border-t-amber-500', soft: 'bg-amber-50', text: 'text-amber-700', ring: 'ring-amber-200' },
+  { id: 'hired', dot: 'bg-emerald-500', bar: 'border-t-emerald-500', soft: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
+  { id: 'cancel', dot: 'bg-rose-500', bar: 'border-t-rose-500', soft: 'bg-rose-50', text: 'text-rose-700', ring: 'ring-rose-200' },
 ] as const;
 
 export type Stage = (typeof STAGES)[number];
@@ -143,32 +145,18 @@ export function initials(name: string): string {
     .toUpperCase();
 }
 
-export function experienceLabel(years: number | null | undefined): string {
-  if (!years) return 'No experience';
-  return years === 1 ? '1 year' : `${years} years`;
+export function experienceLabel(years: number | null | undefined, t: TFunction): string {
+  if (!years) return t('experience.none');
+  return years === 1 ? t('experience.one') : t('experience.many', { n: years });
 }
 
-export function formatDateTime(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+/** Localised stage name ("Yangi" / "New" / "Новые"). */
+export function stageLabel(id: StageId, t: TFunction): string {
+  return t(`stage.${id}` as MessageKey);
 }
 
-/** "Just now", "12 min ago", "3 h ago", "2 d ago", then a plain date. */
-export function timeAgo(iso: string, now: number = Date.now()): string {
-  const t = new Date(iso).getTime();
-  if (Number.isNaN(t)) return '—';
-  const s = Math.max(0, (now - t) / 1000);
-  if (s < 60) return 'Just now';
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m} min ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h} h ago`;
-  const d = Math.floor(h / 24);
-  if (d < 7) return `${d} d ago`;
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
+// date helpers live in i18n/format.ts (they need the active language)
+export { formatDate, formatDateTime, timeAgo } from '@/i18n/format';
 
 /** Search box matcher: name, vacancy, major, phone, @username. */
 export function matchesSearch(a: Application, raw: string): boolean {
@@ -193,7 +181,7 @@ export function applicationsToCsv(list: Application[]): string {
   const cols: [string, (a: Application) => unknown][] = [
     ['Full name', (a) => a.candidate?.full_name],
     ['Vacancy', (a) => a.vacancy?.title],
-    ['Stage', (a) => stageById(a.status).label],
+    ['Stage', (a) => a.status],
     ['Major', (a) => a.candidate?.major],
     ['Age', (a) => a.candidate?.age],
     ['Experience (years)', (a) => a.candidate?.experience_years],

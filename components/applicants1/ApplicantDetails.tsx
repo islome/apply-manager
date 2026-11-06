@@ -11,6 +11,7 @@ import {
   type Application,
   type StageId,
 } from '@/lib/applications';
+import { useT } from '@/i18n/LanguageProvider';
 import { employmentLabel, type EmploymentType } from '@/lib/vacancies';
 import Avatar from './Avatar';
 import { CloseIcon, DownloadIcon } from './icons';
@@ -36,6 +37,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
  * Stage buttons here are also the touch/keyboard way to move a card (drag and drop is mouse only).
  */
 export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props) {
+  const t = useT();
   const ref = useRef<HTMLDialogElement>(null);
   const [resumeBusy, setResumeBusy] = useState(false);
 
@@ -127,7 +129,7 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
                     {[
                       a.vacancy.company,
                       a.vacancy.city,
-                      a.vacancy.employment_type ? employmentLabel(a.vacancy.employment_type as EmploymentType) : null,
+                      a.vacancy.employment_type ? employmentLabel(a.vacancy.employment_type as EmploymentType, t) : null,
                     ]
                       .filter(Boolean)
                       .join(' · ')}

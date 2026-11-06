@@ -7,11 +7,13 @@ import {
   formatDateTime,
   openResume,
   personName,
-  stageById,
+  stageLabel,
   type Application,
   type StageId,
 } from '@/lib/applications';
 import { employmentLabel, type EmploymentType } from '@/lib/vacancies';
+import { cityLabel, majorLabel } from '@/lib/vacancy-options';
+import { useLanguage } from '@/i18n/LanguageProvider';
 import Avatar from './Avatar';
 import { CloseIcon, DownloadIcon } from './icons';
 
@@ -36,6 +38,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
  * Stage buttons here are also the touch/keyboard way to move a card (drag and drop is mouse only).
  */
 export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props) {
+  const { lang, t } = useLanguage();
   const ref = useRef<HTMLDialogElement>(null);
   const [resumeBusy, setResumeBusy] = useState(false);
 
@@ -52,7 +55,7 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
     try {
       await openResume(a.candidate_id);
     } catch (e) {
-      onNotify((e as Error).message || 'Could not open the resume');
+      onNotify((e as Error).message || t('app.resumeFailed'));
     } finally {
       setResumeBusy(false);
     }
@@ -74,11 +77,11 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
       {a && (
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-3">
-            <h2 className="text-sm font-medium text-zinc-500">Candidate</h2>
+            <h2 className="text-sm font-medium text-zinc-500">{t('app.candidate')}</h2>
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close"
+              aria-label={t('common.close')}
               className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
             >
               <CloseIcon className="h-4 w-4" />
@@ -92,11 +95,11 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
                 <h3 id="applicant-title" className="break-words text-lg font-semibold tracking-tight text-zinc-900">
                   {name}
                 </h3>
-                <p className="text-sm text-zinc-500">{c?.major ?? 'No major'}</p>
+                <p className="text-sm text-zinc-500">{c?.major ? majorLabel(c.major, t) : t('app.noMajor')}</p>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-1.5 pb-5" role="group" aria-label="Move to stage">
+            <div className="flex flex-wrap gap-1.5 pb-5" role="group" aria-label={t('app.moveToStage')}>
               {STAGES.map((s) => {
                 const active = s.id === a.status;
                 return (
@@ -113,41 +116,41 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
                     }`}
                   >
                     <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-                    {s.label}
+                    {stageLabel(s.id, t)}
                   </button>
                 );
               })}
             </div>
 
             <dl className="divide-y divide-zinc-100 border-t border-zinc-100">
-              <Field label="Applied for">
-                <span className="font-medium">{a.vacancy?.title ?? 'Deleted vacancy'}</span>
+              <Field label={t('app.appliedForField')}>
+                <span className="font-medium">{a.vacancy?.title ?? t('app.deletedVacancy')}</span>
                 {a.vacancy && (
                   <span className="block pt-0.5 text-xs text-zinc-500">
                     {[
                       a.vacancy.company,
-                      a.vacancy.city,
-                      a.vacancy.employment_type ? employmentLabel(a.vacancy.employment_type as EmploymentType) : null,
+                      a.vacancy.city ? cityLabel(a.vacancy.city, t) : null,
+                      a.vacancy.employment_type ? employmentLabel(a.vacancy.employment_type as EmploymentType, t) : null,
                     ]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>
                 )}
               </Field>
-              <Field label="Stage">
-                {stageById(a.status).label}
-                {a.status === 'cancel' && a.cancelled_by === 'candidate' ? " — nomzod o'zi bekor qildi" : ''}
+              <Field label={t('app.stage')}>
+                {stageLabel(a.status, t)}
+                {a.status === 'cancel' && a.cancelled_by === 'candidate' ? t('app.cancelledByCandidateDash') : ''}
               </Field>
-              <Field label="Age">{c?.age ? `${c.age} years old` : 'Not added'}</Field>
-              <Field label="Experience">{experienceLabel(c?.experience_years)}</Field>
-              <Field label="Language">{c?.language_code ? c.language_code.toUpperCase() : 'Not added'}</Field>
-              <Field label="Phone">
+              <Field label={t('app.age')}>{c?.age ? t('app.yearsOld', { n: c.age }) : t('app.notAdded')}</Field>
+              <Field label={t('app.experience')}>{experienceLabel(c?.experience_years, t)}</Field>
+              <Field label={t('app.language')}>{c?.language_code ? c.language_code.toUpperCase() : t('app.notAdded')}</Field>
+              <Field label={t('app.phone')}>
                 {c?.phone ? (
                   <a className="text-blue-600 hover:underline" href={`tel:${c.phone}`}>
                     {c.phone}
                   </a>
                 ) : (
-                  'Not added'
+                  t('app.notAdded')
                 )}
               </Field>
               <Field label="Telegram">
@@ -162,16 +165,16 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
                   </a>
                 ) : c?.telegram_id ? (
                   <a className="text-blue-600 hover:underline" href={`tg://user?id=${c.telegram_id}`}>
-                    Open in Telegram
+                    {t('app.openInTelegram')}
                   </a>
                 ) : (
-                  'Not added'
+                  t('app.notAdded')
                 )}
               </Field>
-              <Field label="Applied">{formatDateTime(a.created_at)}</Field>
-              <Field label="Last update">{formatDateTime(a.updated_at)}</Field>
+              <Field label={t('app.applied')}>{formatDateTime(a.created_at, lang)}</Field>
+              <Field label={t('app.lastUpdate')}>{formatDateTime(a.updated_at, lang)}</Field>
               {c?.experience_text && (
-                <Field label="About experience">
+                <Field label={t('app.aboutExperience')}>
                   <span className="whitespace-pre-wrap">{c.experience_text}</span>
                 </Field>
               )}
@@ -185,7 +188,7 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
                 className="mt-5 inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-900 hover:bg-zinc-50 disabled:opacity-60"
               >
                 <DownloadIcon className="h-4 w-4" />
-                {resumeBusy ? 'Opening…' : 'Open resume'}
+                {resumeBusy ? t('app.opening') : t('app.openResume')}
               </button>
             )}
           </div>

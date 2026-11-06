@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { X } from 'lucide-react';
 import { safeHttpUrl } from '@/lib/applications';
+import { useT } from '@/i18n/LanguageProvider';
 
 export type HrProfile = {
   company_name: string | null;
@@ -34,6 +35,7 @@ function normalizePhone(raw: string): string | null {
 }
 
 export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [logoUrl, setLogoUrl] = useState(profile?.logo_url ?? '');
@@ -48,7 +50,7 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
     const formData = new FormData(event.currentTarget);
     const phone = normalizePhone(String(formData.get('hr_phone') ?? ''));
     if (phone === null) {
-      setError("Telefon raqami +998 90 123 45 67 ko'rinishida bo'lsin.");
+      setError(t('set.phoneInvalid'));
       return;
     }
     const payload = {
@@ -71,14 +73,14 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
 
       if (!response.ok) {
         const result = (await response.json().catch(() => null)) as { error?: string } | null;
-        setError(result?.error ?? `Profilni saqlab bo'lmadi (${response.status})`);
+        setError(result?.error ?? t('set.profileSaveFailed', { status: response.status }));
         return;
       }
 
       await onSaved();
       onClose();
     } catch {
-      setError("Tarmoq xatosi — ulanishni tekshirib, qayta urinib ko'ring.");
+      setError(t('common.networkError'));
     } finally {
       setBusy(false);
     }
@@ -100,13 +102,13 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 id="edit-profile-title" className="text-lg font-semibold text-zinc-900">
-              {profile ? 'Profilni tahrirlash' : "Profilni to'ldirish"}
+              {profile ? t('set.editProfile') : t('set.fillProfile')}
             </h2>
-            <p className="mt-1 text-sm text-zinc-500">Kompaniya va HR ma&apos;lumotlari.</p>
+            <p className="mt-1 text-sm text-zinc-500">{t('set.modalSubtitle')}</p>
           </div>
           <button
             type="button"
-            aria-label="Yopish"
+            aria-label={t('common.close')}
             disabled={busy}
             onClick={onClose}
             className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-50"
@@ -123,7 +125,7 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
           )}
 
           <label className="block text-sm font-medium text-zinc-700">
-            Kompaniya nomi
+            {t('set.companyName')}
             <input
               name="company_name"
               required
@@ -136,7 +138,7 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
 
           <div>
             <label className="block text-sm font-medium text-zinc-700">
-              Logo (havola)
+              {t('set.logoUrl')}
               <input
                 name="logo_url"
                 type="url"
@@ -160,17 +162,17 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
                   onError={() => setLogoFailed(true)}
                   className="h-10 w-10 rounded-lg border border-zinc-200 object-cover"
                 />
-                Ko&apos;rinishi
+                {t('set.preview')}
               </div>
             )}
             {logoUrl.trim() && (!logoSrc || logoFailed) && (
-              <p className="mt-2 text-xs text-amber-700">Rasm ochilmadi. Havolani tekshiring.</p>
+              <p className="mt-2 text-xs text-amber-700">{t('set.logoFailed')}</p>
             )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-medium text-zinc-700">
-              Xodimlar soni
+              {t('set.employees')}
               <input
                 name="employees"
                 type="number"
@@ -179,28 +181,28 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
                 max={1000000}
                 step={1}
                 defaultValue={profile?.employees ?? ''}
-                placeholder="Masalan, 25"
+                placeholder={t('set.employeesPh')}
                 className={fieldClass}
               />
             </label>
             <label className="text-sm font-medium text-zinc-700">
-              HR ismi
+              {t('set.hrName')}
               <input
                 name="hr_name"
                 maxLength={80}
                 defaultValue={profile?.hr_name ?? ''}
-                placeholder="Ixtiyoriy"
+                placeholder={t('set.optional')}
                 className={fieldClass}
               />
             </label>
             <label className="text-sm font-medium text-zinc-700 sm:col-span-2">
-              HR telefoni
+              {t('set.hrPhone')}
               <input
                 name="hr_phone"
                 type="tel"
                 maxLength={20}
                 defaultValue={profile?.hr_phone ?? ''}
-                placeholder="+998 90 123 45 67 (ixtiyoriy)"
+                placeholder={t('set.phonePh')}
                 className={fieldClass}
               />
             </label>
@@ -213,14 +215,14 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
               onClick={onClose}
               className="h-10 rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
             >
-              Bekor qilish
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={busy}
               className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {busy ? 'Saqlanmoqda…' : 'Saqlash'}
+              {busy ? t('common.saving') : t('common.save')}
             </button>
           </div>
         </form>

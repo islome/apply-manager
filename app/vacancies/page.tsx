@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Pencil, Plus, Power, Trash2 } from 'lucide-react';
 import { useVacancies } from '@/hooks/useVacancies';
+import { useLanguage } from '@/i18n/LanguageProvider';
 import { employmentLabel, formatDate, salaryLabel, type Vacancy } from '@/lib/vacancies';
 import NotFoundAnimation from '../NotFoundAnimation';
 import EmptyBoxAnimation from '../EmptyBoxAnimation';
@@ -36,6 +37,8 @@ function VacancyCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { lang, t } = useLanguage();
+
   return (
     <article className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300">
       <div className="flex items-start justify-between gap-3">
@@ -57,20 +60,20 @@ function VacancyCard({
       </div>
 
       <div className="space-y-0.5">
-        <p className="text-sm font-medium text-zinc-900">{salaryLabel(v)}</p>
+        <p className="text-sm font-medium text-zinc-900">{salaryLabel(v, t)}</p>
         <p className="text-sm text-zinc-500">
           {v.company} · {v.city}
         </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">{employmentLabel(v.employment_type)}</span>
+        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">{employmentLabel(v.employment_type, t)}</span>
         <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">{v.major}</span>
         <span className="px-1 text-xs font-medium text-blue-600">{v.applications_count} ta ariza</span>
       </div>
 
       <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-3">
-        <span className="text-xs text-zinc-500">{formatDate(v.created_at)}</span>
+        <span className="text-xs text-zinc-500">{formatDate(v.created_at, lang)}</span>
         <div className="-mr-1.5 flex items-center gap-0.5" role="group" aria-label={`${v.title}: amallar`}>
           <button
             type="button"

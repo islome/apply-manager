@@ -10,7 +10,10 @@ import {
   Plus,
   UserCheck,
 } from "lucide-react";
-import { STAGES } from "@/lib/applications";
+import { STAGES, stageLabel, timeAgo } from "@/lib/applications";
+import { useLanguage, type TFunction } from "@/i18n/LanguageProvider";
+import { LOCALES, type Lang } from "@/i18n/types";
+import { majorLabel } from "@/lib/vacancy-options";
 
 type Vacancy = {
   id: string;
@@ -40,54 +43,25 @@ type DashboardData = {
 const DAY = 86_400_000;
 const STALE_DAYS = 3; // a "new" application waiting longer than this needs attention
 
-const MONTHS = [
-  "yanvar", "fevral", "mart", "aprel", "may", "iyun",
-  "iyul", "avgust", "sentabr", "oktyabr", "noyabr", "dekabr",
-];
-const WEEKDAYS = ["yakshanba", "dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba"];
-
-// Pipeline stage labels in Uzbek; the colour dot still comes from STAGES in lib/applications.
-const STAGE_LABELS: Record<string, string> = {
-  new: "Yangi",
-  confirmed: "Tasdiqlangan",
-  interview: "Suhbat",
-  hired: "Qabul qilingan",
-  cancel: "Bekor qilingan",
-};
-
-function stageOf(status: string): { label: string; dot: string } {
+function stageOf(status: string, t: TFunction): { label: string; dot: string } {
   const stage = STAGES.find((s) => s.id === status);
-  return { label: STAGE_LABELS[status] ?? stage?.label ?? status, dot: stage?.dot ?? "bg-zinc-400" };
+  return { label: stage ? stageLabel(stage.id, t) : status, dot: stage?.dot ?? "bg-zinc-400" };
 }
 
 function relation<T>(value: T | T[] | null): T | null {
   return Array.isArray(value) ? value[0] ?? null : value;
 }
 
-function longDate(d: Date) {
-  return `${d.getDate()}-${MONTHS[d.getMonth()]}, ${d.getFullYear()} · ${WEEKDAYS[d.getDay()]}`;
+function longDate(d: Date, lang: Lang) {
+  return d.toLocaleDateString(LOCALES[lang], { day: "numeric", month: "long", year: "numeric", weekday: "long" });
 }
 
-function shortDate(d: Date) {
-  return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`;
+function shortDate(d: Date, lang: Lang) {
+  return d.toLocaleDateString(LOCALES[lang], { day: "numeric", month: "short" });
 }
 
 function startOfDay(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-}
-
-function ago(value: string, now: Date) {
-  const t = new Date(value).getTime();
-  if (Number.isNaN(t)) return "—";
-  const diff = Math.max(0, now.getTime() - t);
-  const min = Math.floor(diff / 60_000);
-  if (min < 1) return "hozirgina";
-  if (min < 60) return `${min} daq oldin`;
-  const hours = Math.floor(min / 60);
-  if (hours < 24) return `${hours} soat oldin`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} kun oldin`;
-  return shortDate(new Date(t));
 }
 
 async function fetchDashboardData(): Promise<DashboardData> {
@@ -101,7 +75,7 @@ async function fetchDashboardData(): Promise<DashboardData> {
     const result = (await failedResponse.json().catch(() => null)) as
       | { error?: string }
       | null;
-    throw new Error(result?.error ?? "Ma'lumotlarni yuklab bo'lmadi.");
+    throw new Error(result?.error ?? "");
   }
 
   const [vacancies, applications] = (await Promise.all([
@@ -180,6 +154,8 @@ function Skeleton({ className }: { className: string }) {
 /* -------------------------------------------------------------------- page */
 
 export default function DashboardPage() {
+  const { lang, t } = useLanguage();
+  const ago = (value: string) => timeAgo(value, t, lang, nowMs);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -192,7 +168,7 @@ export default function DashboardPage() {
       setData(await fetchDashboardData());
       setNow(new Date());
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Ma'lumotlarni yuklab bo'lmadi.");
+      setError(loadError instanceof Error && loadError.message ? loadError.message : "\0");
     } finally {
       setLoading(false);
     }
@@ -209,7 +185,7 @@ export default function DashboardPage() {
       })
       .catch((loadError: unknown) => {
         if (active) {
-          setError(loadError instanceof Error ? loadError.message : "Ma'lumotlarni yuklab bo'lmadi.");
+          setError(loadError instanceof Error && loadError.message ? loadError.message : "\0");
         }
       })
       .finally(() => {
@@ -258,7 +234,7 @@ export default function DashboardPage() {
 
   const stageCounts = STAGES.map((s) => ({
     id: s.id as string,
-    ...stageOf(s.id),
+    ...stageOf(s.id, t),
     count: applications.filter((a) => a.status === s.id).length,
   }));
 
@@ -272,7 +248,7 @@ export default function DashboardPage() {
   const categories = applications.reduce<Record<string, number>>((counts, a) => {
     const candidate = relation(a.candidate);
     const vacancy = relation(a.vacancy);
-    const category = candidate?.major?.trim() || vacancy?.major?.trim() || "Tasniflanmagan";
+    const category = candidate?.major?.trim() || vacancy?.major?.trim() || t("dash.byField.uncategorized");
     counts[category] = (counts[category] ?? 0) + 1;
     return counts;
   }, {});
@@ -285,17 +261,17 @@ export default function DashboardPage() {
 
   /* ---- attention items (the actionable part) ---- */
   const attention: { text: string; href: string }[] = [];
-  if (waiting.length) attention.push({ text: `${waiting.length} ta yangi ariza hali ko'rib chiqilmagan`, href: "/applicants" });
-  if (stale.length) attention.push({ text: `${stale.length} ta ariza ${STALE_DAYS} kundan ortiq javob kutmoqda`, href: "/applicants" });
-  if (emptyActive.length) attention.push({ text: `${emptyActive.length} ta faol vakansiyaga hali ariza kelmagan`, href: "/vacancies" });
+  if (waiting.length) attention.push({ text: t("dash.attention.waiting", { n: waiting.length }), href: "/applicants" });
+  if (stale.length) attention.push({ text: t("dash.attention.stale", { n: stale.length, days: STALE_DAYS }), href: "/applicants" });
+  if (emptyActive.length) attention.push({ text: t("dash.attention.emptyVac", { n: emptyActive.length }), href: "/vacancies" });
 
   return (
     <div className="mx-auto w-full max-w-[1600px] px-2 pb-6 ">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Bosh sahifa</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">{t("dash.title")}</h1>
           <p className="text-sm text-zinc-500">
-            {now ? `${longDate(now)} · bugun ${newToday} ta yangi ariza` : "Ma'lumotlar yuklanmoqda…"}
+            {now ? `${longDate(now, lang)} · ${t("dash.todayNew", { n: newToday })}` : t("dash.loadingData")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -304,7 +280,7 @@ export default function DashboardPage() {
             className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
             <Plus size={16} />
-            Vakansiya qo&apos;shish
+            {t("dash.addVacancy")}
           </Link>
         </div>
       </header>
@@ -314,23 +290,23 @@ export default function DashboardPage() {
           role="alert"
           className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700"
         >
-          <p>{error}</p>
+          <p>{error === "\0" ? t("dash.loadFailed") : error}</p>
           <button type="button" onClick={() => void load()} className="font-medium underline">
-            Qayta urinish
+            {t("common.retry")}
           </button>
         </div>
       )}
 
       {/* what needs a decision right now */}
       {ready && (
-        <section aria-label="E'tibor talab qiladi" className="mb-5 rounded-xl border border-zinc-200 bg-white">
+        <section aria-label={t("dash.attention.title")} className="mb-5 rounded-xl border border-zinc-200 bg-white">
           <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-4">
-            <h2 className="text-sm font-semibold text-zinc-900">E&apos;tibor talab qiladi</h2>
-            <span className="text-xs text-zinc-500">{attention.length ? `${attention.length} ta` : "Hammasi joyida"}</span>
+            <h2 className="text-sm font-semibold text-zinc-900">{t("dash.attention.title")}</h2>
+            <span className="text-xs text-zinc-500">{attention.length ? t("dash.attention.count", { n: attention.length }) : t("dash.attention.allGood")}</span>
           </div>
 
           {attention.length === 0 ? (
-            <p className="px-5 pb-4 text-sm text-zinc-500">Hozircha shoshilinch ish yo&apos;q: yangi arizalar ko&apos;rib chiqilgan.</p>
+            <p className="px-5 pb-4 text-sm text-zinc-500">{t("dash.attention.none")}</p>
           ) : (
             <div className="grid gap-x-8 gap-y-4 px-5 pb-4 lg:grid-cols-2">
               <ul className="divide-y divide-zinc-100">
@@ -341,7 +317,7 @@ export default function DashboardPage() {
                       <span className="truncate">{item.text}</span>
                     </span>
                     <Link href={item.href} className="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-700">
-                      Ko&apos;rish
+                      {t("dash.view")}
                     </Link>
                   </li>
                 ))}
@@ -349,7 +325,7 @@ export default function DashboardPage() {
 
               {waiting.length > 0 && (
                 <div>
-                  <p className="mb-1 text-xs text-zinc-500">Eng uzoq kutayotganlar</p>
+                  <p className="mb-1 text-xs text-zinc-500">{t("dash.attention.longest")}</p>
                   <ul className="divide-y divide-zinc-100">
                     {waiting.slice(0, 3).map((a) => {
                       const c = relation(a.candidate);
@@ -357,10 +333,10 @@ export default function DashboardPage() {
                       return (
                         <li key={a.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                           <span className="min-w-0 truncate text-zinc-900">
-                            {c?.full_name || "Noma'lum nomzod"}
+                            {c?.full_name || t("dash.unknownCandidate")}
                             <span className="text-zinc-500"> · {v?.title || "—"}</span>
                           </span>
-                          <span className="shrink-0 text-xs text-zinc-500">{ago(a.created_at, now!)}</span>
+                          <span className="shrink-0 text-xs text-zinc-500">{ago(a.created_at)}</span>
                         </li>
                       );
                     })}
@@ -373,25 +349,25 @@ export default function DashboardPage() {
       )}
 
       {/* key numbers */}
-      <section aria-label="Statistika" aria-busy={loading} className="grid grid-cols-1 gap-3 min-[560px]:grid-cols-2 xl:grid-cols-4">
+      <section aria-label={t("dash.stats")} aria-busy={loading} className="grid grid-cols-1 gap-3 min-[560px]:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           loading={!ready && !error}
           icon={Inbox}
-          title="Yangi arizalar"
+          title={t("dash.kpi.new")}
           value={num(waiting.length)}
-          foot={!ready ? "" : waiting.length && now ? `Eng eskisi: ${ago(waiting[0].created_at, now)}` : "Kutayotgani yo'q"}
+          foot={!ready ? "" : waiting.length && now ? t("dash.kpi.oldest", { ago: ago(waiting[0].created_at) }) : t("dash.kpi.noneWaiting")}
         />
         <KpiCard
           loading={!ready && !error}
           icon={CalendarDays}
-          title="Shu hafta"
+          title={t("dash.kpi.week")}
           value={num(thisWeek)}
           foot={
             !ready ? "" : weekDelta === 0 ? (
-              "O'tgan haftadek"
+              t("dash.kpi.sameWeek")
             ) : (
               <span className={weekDelta > 0 ? "text-emerald-700" : "text-zinc-500"}>
-                {weekDelta > 0 ? "↑" : "↓"} {Math.abs(weekDelta)} ta o&apos;tgan haftaga nisbatan
+                {weekDelta > 0 ? "↑" : "↓"} {t("dash.kpi.weekDelta", { n: Math.abs(weekDelta) })}
               </span>
             )
           }
@@ -399,43 +375,43 @@ export default function DashboardPage() {
         <KpiCard
           loading={!ready && !error}
           icon={BriefcaseBusiness}
-          title="Faol vakansiyalar"
+          title={t("dash.kpi.activeVac")}
           value={num(activeVacancies.length)}
-          foot={ready ? `Jami ${vacancies.length} ta, ${vacancies.length - activeVacancies.length} tasi nofaol` : ""}
+          foot={ready ? t("dash.kpi.vacFoot", { total: vacancies.length, inactive: vacancies.length - activeVacancies.length }) : ""}
         />
         <KpiCard
           loading={!ready && !error}
           icon={UserCheck}
-          title="Qabul qilinganlar"
+          title={t("dash.kpi.hired")}
           value={num(hired)}
-          foot={!ready ? "" : hireRate === null ? "Hali ariza yo'q" : `Jami arizalarning ${hireRate}%`}
+          foot={!ready ? "" : hireRate === null ? t("dash.kpi.noApps") : t("dash.kpi.hireRate", { n: hireRate })}
         />
       </section>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
         <div className="space-y-5">
-          <Card title="Arizalar dinamikasi" subtitle="So'nggi 14 kun">
+          <Card title={t("dash.trend.title")} subtitle={t("dash.trend.subtitle")}>
             {!ready ? (
               <Skeleton className="h-28" />
             ) : (
               <>
                 <div
                   role="img"
-                  aria-label={`So'nggi 14 kunda ${days.reduce((s, d) => s + d.count, 0)} ta ariza`}
+                  aria-label={t("dash.trend.aria", { n: days.reduce((s, d) => s + d.count, 0) })}
                   className="flex h-28 items-end gap-1.5"
                 >
                   {days.map((d, i) => (
                     <div
                       key={i}
-                      title={`${shortDate(d.date)}: ${d.count} ta`}
+                      title={t("dash.trend.bar", { date: shortDate(d.date, lang), n: d.count })}
                       className={`flex-1 rounded-sm ${d.count ? "bg-blue-500" : "bg-zinc-200"}`}
                       style={{ height: d.count ? `${Math.max(8, (d.count / maxDay) * 100)}%` : "2px" }}
                     />
                   ))}
                 </div>
                 <div className="mt-2 flex justify-between text-xs text-zinc-500">
-                  <span>{shortDate(days[0].date)}</span>
-                  <span>Bugun</span>
+                  <span>{shortDate(days[0].date, lang)}</span>
+                  <span>{t("dash.trend.today")}</span>
                 </div>
               </>
             )}
@@ -444,20 +420,20 @@ export default function DashboardPage() {
           <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
             <div className="flex items-start justify-between gap-3 px-5 pb-3 pt-4">
               <div>
-                <h2 className="text-sm font-semibold text-zinc-900">So&apos;nggi arizalar</h2>
-                <p className="mt-0.5 text-xs text-zinc-500">Eng oxirgi 8 ta</p>
+                <h2 className="text-sm font-semibold text-zinc-900">{t("dash.recent.title")}</h2>
+                <p className="mt-0.5 text-xs text-zinc-500">{t("dash.recent.subtitle")}</p>
               </div>
               <Link
                 href="/applicants"
                 className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
               >
-                Hammasi
+                {t("dash.all")}
                 <ArrowUpRight size={14} />
               </Link>
             </div>
 
             {!ready && !error && (
-              <div className="space-y-2 px-5 pb-5" aria-label="Arizalar yuklanmoqda">
+              <div className="space-y-2 px-5 pb-5" aria-label={t("dash.recent.loading")}>
                 {[0, 1, 2].map((i) => (
                   <Skeleton key={i} className="h-11" />
                 ))}
@@ -466,7 +442,7 @@ export default function DashboardPage() {
 
             {ready && recent.length === 0 && (
               <p className="px-5 pb-5 text-sm text-zinc-500">
-                Hozircha arizalar yo&apos;q. Nomzodlar bot orqali ariza topshirganda, ular shu yerda ko&apos;rinadi.
+                {t("dash.recent.empty")}
               </p>
             )}
 
@@ -475,25 +451,25 @@ export default function DashboardPage() {
                 <table className="w-full min-w-[620px] border-collapse text-left">
                   <thead>
                     <tr className="border-y border-zinc-100 text-xs font-medium text-zinc-500">
-                      <th className="px-5 py-2.5 font-medium">Nomzod</th>
-                      <th className="px-4 py-2.5 font-medium">Vakansiya</th>
-                      <th className="px-4 py-2.5 font-medium">Yo&apos;nalish</th>
-                      <th className="px-4 py-2.5 font-medium">Topshirdi</th>
-                      <th className="px-4 py-2.5 font-medium">Bosqich</th>
+                      <th className="px-5 py-2.5 font-medium">{t("dash.recent.candidate")}</th>
+                      <th className="px-4 py-2.5 font-medium">{t("dash.recent.vacancy")}</th>
+                      <th className="px-4 py-2.5 font-medium">{t("dash.recent.field")}</th>
+                      <th className="px-4 py-2.5 font-medium">{t("dash.recent.submitted")}</th>
+                      <th className="px-4 py-2.5 font-medium">{t("dash.recent.stage")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {recent.map((a) => {
                       const c = relation(a.candidate);
                       const v = relation(a.vacancy);
-                      const name = c?.full_name || "Noma'lum nomzod";
+                      const name = c?.full_name || t("dash.unknownCandidate");
                       const initials = name
                         .split(/\s+/)
                         .slice(0, 2)
                         .map((part) => part[0])
                         .join("")
                         .toUpperCase();
-                      const stage = stageOf(a.status);
+                      const stage = stageOf(a.status, t);
 
                       return (
                         <tr key={a.id} className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50">
@@ -506,8 +482,8 @@ export default function DashboardPage() {
                             </div>
                           </td>
                           <td className="px-4 py-2.5 text-sm text-zinc-700">{v?.title || "—"}</td>
-                          <td className="px-4 py-2.5 text-sm text-zinc-500">{c?.major || v?.major || "—"}</td>
-                          <td className="whitespace-nowrap px-4 py-2.5 text-xs text-zinc-500">{ago(a.created_at, now!)}</td>
+                          <td className="px-4 py-2.5 text-sm text-zinc-500">{c?.major || v?.major ? majorLabel((c?.major || v?.major)!, t) : "—"}</td>
+                          <td className="whitespace-nowrap px-4 py-2.5 text-xs text-zinc-500">{ago(a.created_at)}</td>
                           <td className="px-4 py-2.5">
                             <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-zinc-700">
                               <span className={`h-1.5 w-1.5 rounded-full ${stage.dot}`} />
@@ -525,11 +501,11 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-5">
-          <Card title="Tanlov voronkasi" subtitle="Arizalar bosqichlar bo'yicha">
+          <Card title={t("dash.funnel.title")} subtitle={t("dash.funnel.subtitle")}>
             {!ready ? (
               <Skeleton className="h-40" />
             ) : total === 0 ? (
-              <p className="text-sm text-zinc-500">Ariza kelgach, bosqichlar shu yerda ko&apos;rinadi.</p>
+              <p className="text-sm text-zinc-500">{t("dash.funnel.empty")}</p>
             ) : (
               <ul className="space-y-3.5">
                 {stageCounts.map((s) => (
@@ -553,24 +529,24 @@ export default function DashboardPage() {
             )}
           </Card>
 
-          <Card title="Vakansiyalar bo'yicha" subtitle="Qaysi vakansiyaga ko'proq ariza keldi" action={{ href: "/vacancies", label: "Hammasi" }}>
+          <Card title={t("dash.byVac.title")} subtitle={t("dash.byVac.subtitle")} action={{ href: "/vacancies", label: t("dash.all") }}>
             {!ready ? (
               <Skeleton className="h-40" />
             ) : vacancyRows.length === 0 ? (
-              <p className="text-sm text-zinc-500">Hali vakansiya qo&apos;shilmagan.</p>
+              <p className="text-sm text-zinc-500">{t("dash.byVac.empty")}</p>
             ) : (
               <ul className="divide-y divide-zinc-100">
                 {vacancyRows.slice(0, 5).map((v) => (
                   <li key={v.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
                     <span className="flex min-w-0 items-center gap-2">
                       <span
-                        title={v.is_active ? "Faol" : "Nofaol"}
+                        title={v.is_active ? t("dash.byVac.active") : t("dash.byVac.inactive")}
                         className={`h-1.5 w-1.5 shrink-0 rounded-full ${v.is_active ? "bg-emerald-500" : "bg-zinc-400"}`}
                       />
-                      <span className={`truncate ${v.is_active ? "text-zinc-900" : "text-zinc-500"}`}>{v.title ?? "Vakansiya"}</span>
+                      <span className={`truncate ${v.is_active ? "text-zinc-900" : "text-zinc-500"}`}>{v.title ?? t("dash.byVac.fallback")}</span>
                     </span>
                     {v.is_active && v.count === 0 ? (
-                      <span className="shrink-0 text-xs text-amber-700">ariza yo&apos;q</span>
+                      <span className="shrink-0 text-xs text-amber-700">{t("dash.byVac.noApps")}</span>
                     ) : (
                       <span className="shrink-0 tabular-nums text-zinc-900">{v.count}</span>
                     )}
@@ -580,17 +556,17 @@ export default function DashboardPage() {
             )}
           </Card>
 
-          <Card title="Yo'nalish bo'yicha" subtitle="Nomzodning mutaxassisligi">
+          <Card title={t("dash.byField.title")} subtitle={t("dash.byField.subtitle")}>
             {!ready ? (
               <Skeleton className="h-32" />
             ) : categoryEntries.length === 0 ? (
-              <p className="text-sm text-zinc-500">Hali yo&apos;nalishlar yo&apos;q.</p>
+              <p className="text-sm text-zinc-500">{t("dash.byField.empty")}</p>
             ) : (
               <ul className="space-y-3.5">
                 {categoryEntries.map(([category, count]) => (
                   <li key={category}>
                     <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
-                      <span className="truncate text-zinc-700">{category}</span>
+                      <span className="truncate text-zinc-700">{majorLabel(category, t)}</span>
                       <span className="shrink-0 tabular-nums text-zinc-900">{count}</span>
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100">

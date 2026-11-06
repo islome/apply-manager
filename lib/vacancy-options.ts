@@ -1,20 +1,24 @@
 // Fixed lists for the vacancy forms.
 // MAJORS values must stay identical to MAJORS in applier-bot/lib/constants.ts —
-// candidates are matched to vacancies by this exact string.
-export const MAJORS: { value: string; label: string }[] = [
-  { value: 'IT / Software', label: 'IT / Dasturlash' },
-  { value: 'Design', label: 'Dizayn' },
-  { value: 'Marketing / SMM', label: 'Marketing / SMM' },
-  { value: 'Sales', label: 'Savdo' },
-  { value: 'Finance / Accounting', label: 'Moliya / Buxgalteriya' },
-  { value: 'Economics / Management', label: 'Iqtisodiyot / Menejment' },
-  { value: 'Education / Teaching', label: "Ta'lim / O'qituvchilik" },
-  { value: 'Engineering', label: 'Muhandislik' },
-  { value: 'Medicine / Pharmacy', label: 'Tibbiyot / Farmatsevtika' },
-  { value: 'Logistics / Transport', label: 'Logistika / Transport' },
-  { value: 'Law', label: 'Yurisprudensiya' },
-  { value: 'Customer Support', label: "Mijozlarga xizmat ko'rsatish" },
-  { value: 'Other', label: 'Boshqa' },
+// candidates are matched to vacancies by this exact string. Display names come from
+// i18n (`major.<value>`, `city.<value>`): use majorLabel()/cityLabel().
+import type { TFunction } from '@/i18n/LanguageProvider';
+import type { MessageKey } from '@/i18n/messages';
+
+export const MAJORS: string[] = [
+  'IT / Software',
+  'Design',
+  'Marketing / SMM',
+  'Sales',
+  'Finance / Accounting',
+  'Economics / Management',
+  'Education / Teaching',
+  'Engineering',
+  'Medicine / Pharmacy',
+  'Logistics / Transport',
+  'Law',
+  'Customer Support',
+  'Other',
 ];
 
 export const CITIES: string[] = [
@@ -33,3 +37,11 @@ export const CITIES: string[] = [
   'Sirdaryo viloyati',
   'Surxondaryo viloyati',
 ];
+
+/** Localised name; unknown legacy values are shown as stored. */
+export function majorLabel(value: string, t: TFunction): string {
+  return MAJORS.includes(value) ? t(`major.${value}` as MessageKey) : value;
+}
+export function cityLabel(value: string, t: TFunction): string {
+  return CITIES.includes(value) ? t(`city.${value}` as MessageKey) : value;
+}

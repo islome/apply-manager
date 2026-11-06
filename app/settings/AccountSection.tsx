@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { KeyRound, UserRound } from 'lucide-react';
+import { useT, type TFunction } from '@/i18n/LanguageProvider';
 
 const fieldClass =
   'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
@@ -23,7 +24,7 @@ function Notice({ msg }: { msg: Msg }) {
   );
 }
 
-async function patchAccount(body: Record<string, string>): Promise<{ username?: string }> {
+async function patchAccount(body: Record<string, string>, t: TFunction): Promise<{ username?: string }> {
   let res: Response;
   try {
     res = await fetch('/api/hr/account', {
@@ -33,14 +34,15 @@ async function patchAccount(body: Record<string, string>): Promise<{ username?: 
       body: JSON.stringify(body),
     });
   } catch {
-    throw new Error("Tarmoq xatosi — ulanishni tekshirib, qayta urinib ko'ring.");
+    throw new Error(t('common.networkError'));
   }
   const data = (await res.json().catch(() => null)) as { error?: string; username?: string } | null;
-  if (!res.ok) throw new Error(data?.error ?? `Saqlab bo'lmadi (${res.status})`);
+  if (!res.ok) throw new Error(data?.error ?? t('set.saveFailed', { status: res.status }));
   return data ?? {};
 }
 
 export default function AccountSection({ username, onRenamed }: { username: string; onRenamed: (u: string) => void }) {
+  const t = useT();
   const [busy, setBusy] = useState<'user' | 'pass' | null>(null);
   const [userMsg, setUserMsg] = useState<Msg>(null);
   const [passMsg, setPassMsg] = useState<Msg>(null);
@@ -56,10 +58,10 @@ export default function AccountSection({ username, onRenamed }: { username: stri
       const r = await patchAccount({
         username: String(fd.get('username') ?? ''),
         current_password: String(fd.get('current_password') ?? ''),
-      });
+      }, t);
       onRenamed(r.username ?? username);
       form.reset();
-      setUserMsg({ kind: 'ok', text: 'Username yangilandi.' });
+      setUserMsg({ kind: 'ok', text: t('set.usernameUpdated') });
     } catch (err) {
       setUserMsg({ kind: 'err', text: (err as Error).message });
     } finally {
@@ -74,15 +76,15 @@ export default function AccountSection({ username, onRenamed }: { username: stri
     const fd = new FormData(form);
     const next = String(fd.get('new_password') ?? '');
     if (next !== String(fd.get('confirm_password') ?? '')) {
-      setPassMsg({ kind: 'err', text: 'Yangi parollar bir xil emas.' });
+      setPassMsg({ kind: 'err', text: t('set.passwordMismatch') });
       return;
     }
     setBusy('pass');
     setPassMsg(null);
     try {
-      await patchAccount({ new_password: next, current_password: String(fd.get('current_password') ?? '') });
+      await patchAccount({ new_password: next, current_password: String(fd.get('current_password') ?? '') }, t);
       form.reset();
-      setPassMsg({ kind: 'ok', text: 'Parol yangilandi.' });
+      setPassMsg({ kind: 'ok', text: t('set.passwordUpdated') });
     } catch (err) {
       setPassMsg({ kind: 'err', text: (err as Error).message });
     } finally {
@@ -94,16 +96,16 @@ export default function AccountSection({ username, onRenamed }: { username: stri
     <div className="space-y-6">
       <section className="rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
         <h2 className="flex items-center gap-2 text-base font-semibold text-zinc-900">
-          <UserRound size={18} /> Username
+          <UserRound size={18} /> {t('set.username')}
         </h2>
         <p className="mt-1 text-sm text-zinc-500">
-          Hozirgi: <span className="font-medium text-zinc-900">{username}</span>
+          {t('set.current')} <span className="font-medium text-zinc-900">{username}</span>
         </p>
         <form onSubmit={saveUsername} className="mt-4 space-y-4">
           <Notice msg={userMsg} />
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-medium text-zinc-700">
-              Yangi username
+              {t('set.newUsername')}
               <input
                 name="username"
                 required
@@ -115,39 +117,39 @@ export default function AccountSection({ username, onRenamed }: { username: stri
               />
             </label>
             <label className="text-sm font-medium text-zinc-700">
-              Joriy parol
+              {t('set.currentPassword')}
               <input name="current_password" type="password" required autoComplete="current-password" className={fieldClass} />
             </label>
           </div>
           <button type="submit" disabled={busy !== null} className={buttonClass}>
-            {busy === 'user' ? 'Saqlanmoqda…' : 'Usernameni saqlash'}
+            {busy === 'user' ? t('common.saving') : t('set.saveUsername')}
           </button>
         </form>
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
         <h2 className="flex items-center gap-2 text-base font-semibold text-zinc-900">
-          <KeyRound size={18} /> Parolni almashtirish
+          <KeyRound size={18} /> {t('set.changePassword')}
         </h2>
-        <p className="mt-1 text-sm text-zinc-500">Kamida 8 ta belgi.</p>
+        <p className="mt-1 text-sm text-zinc-500">{t('set.minChars')}</p>
         <form onSubmit={savePassword} className="mt-4 space-y-4">
           <Notice msg={passMsg} />
           <label className="block text-sm font-medium text-zinc-700">
-            Joriy parol
+            {t('set.currentPassword')}
             <input name="current_password" type="password" required autoComplete="current-password" className={fieldClass} />
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-medium text-zinc-700">
-              Yangi parol
+              {t('set.newPassword')}
               <input name="new_password" type="password" required minLength={8} maxLength={200} autoComplete="new-password" className={fieldClass} />
             </label>
             <label className="text-sm font-medium text-zinc-700">
-              Yangi parolni takrorlang
+              {t('set.repeatPassword')}
               <input name="confirm_password" type="password" required minLength={8} maxLength={200} autoComplete="new-password" className={fieldClass} />
             </label>
           </div>
           <button type="submit" disabled={busy !== null} className={buttonClass}>
-            {busy === 'pass' ? 'Saqlanmoqda…' : 'Parolni saqlash'}
+            {busy === 'pass' ? t('common.saving') : t('set.savePassword')}
           </button>
         </form>
       </section>
