@@ -1,4 +1,4 @@
-import type { NextRequest, NextResponse } from 'next/server';
+import { after, type NextRequest, type NextResponse } from 'next/server';
 import { supabaseAdmin } from './supabase-admin';
 import { fail, isUuid } from './hr-http';
 import { SESSION_COOKIE, SESSION_TTL_S, signSession, verifySession } from './hr-session';
@@ -27,6 +27,25 @@ export function clearSession(res: NextResponse): void {
   });
 }
 
+// "HR is online" for candidates: every authenticated API call refreshes hr_users.last_seen_at, at most
+// once a minute per server instance. Best effort: runs after the response, errors (e.g. the column
+// from supabase/010 does not exist yet) are ignored.
+const lastPing = new Map<string, number>();
+const PING_EVERY_MS = 60_000;
+
+function touchPresence(hrId: string) {
+  const now = Date.now();
+  if (now - (lastPing.get(hrId) ?? 0) < PING_EVERY_MS) return;
+  lastPing.set(hrId, now);
+  try {
+    after(async () => {
+      await supabaseAdmin().from('hr_users').update({ last_seen_at: new Date().toISOString() }).eq('id', hrId);
+    });
+  } catch {
+    /* not inside a request scope: skip */
+  }
+}
+
 /** Verifies the cookie AND re-checks the user in the DB, so disabling a user logs them out. */
 export async function getHr(req: NextRequest): Promise<HrUser | null> {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
@@ -41,6 +60,7 @@ export async function getHr(req: NextRequest): Promise<HrUser | null> {
     .eq('id', sub)
     .maybeSingle();
   if (!data || !data.is_active) return null;
+  touchPresence(data.id);
   return { id: data.id, username: data.username, profile_id: data.profile_id };
 }
 
