@@ -14,6 +14,7 @@ import { STAGES, stageLabel, timeAgo } from "@/lib/applications";
 import { useLanguage, type TFunction } from "@/i18n/LanguageProvider";
 import { LOCALES, type Lang } from "@/i18n/types";
 import { majorLabel } from "@/lib/vacancy-options";
+import Avatar from "@/components/applicants/Avatar";
 
 type Vacancy = {
   id: string;
@@ -24,6 +25,7 @@ type Vacancy = {
 type Candidate = {
   full_name: string;
   major: string | null;
+  photo_url: string | null;
 };
 
 type Application = {
@@ -463,21 +465,18 @@ export default function DashboardPage() {
                       const c = relation(a.candidate);
                       const v = relation(a.vacancy);
                       const name = c?.full_name || t("dash.unknownCandidate");
-                      const initials = name
-                        .split(/\s+/)
-                        .slice(0, 2)
-                        .map((part) => part[0])
-                        .join("")
-                        .toUpperCase();
                       const stage = stageOf(a.status, t);
 
                       return (
                         <tr key={a.id} className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50">
                           <td className="px-5 py-2.5">
                             <div className="flex items-center gap-3">
-                              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600">
-                                {initials}
-                              </span>
+                              <Avatar
+                                key={c?.photo_url ?? name}
+                                name={name}
+                                url={c?.photo_url}
+                                className="h-8 w-8 text-xs"
+                              />
                               <span className="text-sm font-medium text-zinc-900">{name}</span>
                             </div>
                           </td>
