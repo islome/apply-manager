@@ -10,11 +10,6 @@ import { createEmployee, fetchEmployees, updateEmployee, type Employee, type Emp
 const CACHE_KEY = 'employees';
 type LoadState = 'loading' | 'ok' | 'error';
 
-/**
- * Hired employees. Shows the cached list instantly, refreshes quietly in the background.
- * `save()` returns the updated row (or throws ApiError for the modal to display).
- * `error` holds the HTTP status (0 = network) so the page can render a translated message.
- */
 export function useEmployees() {
   const router = useRouter();
   const [employees, setEmployees] = useState<Employee[]>(() => getCached<Employee[]>(CACHE_KEY) ?? []);
@@ -51,7 +46,13 @@ export function useEmployees() {
   }, []);
 
   const save = useCallback(async (id: string, patch: EmployeePatch): Promise<Employee> => {
-    const saved = await updateEmployee(id, patch);
+    let saved: Employee;
+    try {
+      saved = await updateEmployee(id, patch);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) setReloadKey((k) => k + 1); // stale list: refetch
+      throw e;
+    }
     setEmployees((list) => {
       const next = list.map((e) => (e.id === id ? { ...e, ...saved } : e));
       setCached(CACHE_KEY, next);
