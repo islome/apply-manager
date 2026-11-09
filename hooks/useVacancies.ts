@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiError, fetchVacancies, type Vacancy } from '@/lib/vacancies';
 import { LOGIN_PATH } from '@/lib/hr-redirect';
+import { getCached, setCached } from '@/lib/data-cache';
 
 type State = 'loading' | 'ok' | 'error';
 
@@ -15,8 +16,9 @@ type State = 'loading' | 'ok' | 'error';
  */
 export function useVacancies(opts: { active?: boolean } = {}) {
   const router = useRouter();
-  const [vacancies, setVacancies] = useState<Vacancy[]>([]);
-  const [state, setState] = useState<State>('loading');
+  const cacheKey = `vacancies:${String(opts.active)}`;
+  const [vacancies, setVacancies] = useState<Vacancy[]>(() => getCached<Vacancy[]>(cacheKey) ?? []);
+  const [state, setState] = useState<State>(() => (getCached(cacheKey) ? 'ok' : 'loading'));
   const [error, setError] = useState<string>('');
   const abortRef = useRef<AbortController | null>(null);
 
@@ -25,9 +27,9 @@ export function useVacancies(opts: { active?: boolean } = {}) {
       abortRef.current?.abort();
       const ctrl = new AbortController();
       abortRef.current = ctrl;
-      if (!background) setState('loading');
       try {
         const rows = await fetchVacancies({ active: opts.active, signal: ctrl.signal });
+        setCached(cacheKey, rows);
         setVacancies(rows);
         setError('');
         setState('ok');
@@ -40,19 +42,22 @@ export function useVacancies(opts: { active?: boolean } = {}) {
         }
         setError((e as Error).message || 'Could not load vacancies');
         // keep showing the last good list on a failed background refresh
-        if (!background) setState('error');
+        if (!background || getCached(cacheKey) === undefined) setState('error');
       }
     },
-    [opts.active, router]
+    [opts.active, router, cacheKey]
   );
 
   useEffect(() => {
-    void load(false);
+    void load(true); // initial state is already 'loading' when nothing is cached
     return () => abortRef.current?.abort();
   }, [load]);
 
   const reload = useCallback(() => load(true), [load]);
-  const retry = useCallback(() => load(false), [load]);
+  const retry = useCallback(() => {
+    setState('loading');
+    return load(false);
+  }, [load]);
 
   return { vacancies, state, error, reload, retry };
 }

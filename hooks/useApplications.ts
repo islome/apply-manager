@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiError } from '@/lib/api-client';
 import { LOGIN_PATH } from '@/lib/hr-redirect';
+import { getCached, setCached } from '@/lib/data-cache';
 import {
   fetchApplications,
   updateApplicationStatus,
@@ -12,6 +13,7 @@ import {
 } from '@/lib/applications';
 
 const REFRESH_MS = 60_000;
+const CACHE_KEY = 'applications';
 
 type LoadState = 'loading' | 'ok' | 'error';
 export type MoveResult = { ok: boolean; message?: string };
@@ -26,17 +28,18 @@ export type MoveResult = { ok: boolean; message?: string };
  */
 export function useApplications() {
   const router = useRouter();
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [state, setState] = useState<LoadState>('loading');
+  const [applications, setApplications] = useState<Application[]>(() => getCached<Application[]>(CACHE_KEY) ?? []);
+  const [state, setState] = useState<LoadState>(() => (getCached(CACHE_KEY) ? 'ok' : 'loading'));
   const [error, setError] = useState('');
 
-  const listRef = useRef<Application[]>([]); // source of truth, mirrored into state
+  const listRef = useRef<Application[]>(getCached<Application[]>(CACHE_KEY) ?? []); // source of truth, mirrored into state
   const abortRef = useRef<AbortController | null>(null);
   const inflightRef = useRef(0); // moves being saved
   const seqRef = useRef(0); // bumped on every move; invalidates refreshes that started earlier
 
   const commit = useCallback((update: (prev: Application[]) => Application[]) => {
     listRef.current = update(listRef.current);
+    setCached(CACHE_KEY, listRef.current);
     setApplications(listRef.current);
   }, []);
 
@@ -50,7 +53,6 @@ export function useApplications() {
       const ctrl = new AbortController();
       abortRef.current = ctrl;
       const seq = seqRef.current;
-      if (!background) setState('loading');
       try {
         const rows = await fetchApplications(ctrl.signal);
         if (seq !== seqRef.current || inflightRef.current > 0) return; // stale snapshot
@@ -64,14 +66,14 @@ export function useApplications() {
           return;
         }
         setError((e as Error).message || 'Could not load applications');
-        if (!background) setState('error'); // a failed background refresh keeps the last good data
+        if (!background || getCached(CACHE_KEY) === undefined) setState('error'); // a failed background refresh keeps the last good data
       }
     },
     [commit, goToLogin]
   );
 
   useEffect(() => {
-    void load(false);
+    void load(true); // initial state is already 'loading' when nothing is cached
     const tick = () => {
       if (!document.hidden && inflightRef.current === 0) void load(true);
     };
@@ -117,7 +119,10 @@ export function useApplications() {
     [commit, goToLogin]
   );
 
-  const retry = useCallback(() => load(false), [load]);
+  const retry = useCallback(() => {
+    setState('loading');
+    return load(false);
+  }, [load]);
 
   return { applications, state, error, move, retry };
 }

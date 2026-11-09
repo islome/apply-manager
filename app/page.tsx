@@ -15,6 +15,7 @@ import { useLanguage, type TFunction } from "@/i18n/LanguageProvider";
 import { LOCALES, type Lang } from "@/i18n/types";
 import { majorLabel } from "@/lib/vacancy-options";
 import Avatar from "@/components/applicants/Avatar";
+import { getCached, setCached } from "@/lib/data-cache";
 
 type Vacancy = {
   id: string;
@@ -158,16 +159,18 @@ function Skeleton({ className }: { className: string }) {
 export default function DashboardPage() {
   const { lang, t } = useLanguage();
   const ago = (value: string) => timeAgo(value, t, lang, nowMs);
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<DashboardData | null>(() => getCached<DashboardData>("dashboard") ?? null);
+  const [loading, setLoading] = useState(() => !getCached("dashboard"));
   const [error, setError] = useState("");
-  const [now, setNow] = useState<Date | null>(null);
+  const [now, setNow] = useState<Date | null>(() => (getCached("dashboard") ? new Date() : null));
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      setData(await fetchDashboardData());
+      const fresh = await fetchDashboardData();
+      setCached("dashboard", fresh);
+      setData(fresh);
       setNow(new Date());
     } catch (loadError) {
       setError(loadError instanceof Error && loadError.message ? loadError.message : "\0");
@@ -180,6 +183,7 @@ export default function DashboardPage() {
     let active = true;
     fetchDashboardData()
       .then((result) => {
+        setCached("dashboard", result);
         if (active) {
           setData(result);
           setNow(new Date());

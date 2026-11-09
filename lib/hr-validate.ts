@@ -157,3 +157,84 @@ export function parseProfile(body: unknown): Ok<ProfileInput> | Bad {
 
   return { ok: true, data: { company_name, logo_url, employees, hr_name, hr_phone } };
 }
+
+/* ---------------------------------------------------------------- employees */
+
+export const EMPLOYEE_STATUSES = ['active', 'left'] as const;
+
+export type EmployeeInput = {
+  full_name?: string;
+  phone?: string | null;
+  position?: string | null;
+  department?: string | null;
+  salary?: number | null;
+  salary_currency?: (typeof CURRENCIES)[number];
+  hired_at?: string;
+  status?: (typeof EMPLOYEE_STATUSES)[number];
+  left_at?: string | null;
+  notes?: string | null;
+};
+
+const isDate = (v: unknown): v is string =>
+  typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
+
+/** PATCH body for a hired employee: every key optional, unknown keys ignored. */
+export function parseEmployee(body: unknown): Ok<EmployeeInput> | Bad {
+  if (!body || typeof body !== 'object') return bad('Invalid request body');
+  const b = body as Record<string, unknown>;
+  const out: EmployeeInput = {};
+
+  const text = (key: 'position' | 'department' | 'notes', max: number): string | null | undefined => {
+    if (!(key in b)) return undefined;
+    if (b[key] == null || b[key] === '') return null;
+    const s = str(b[key]);
+    return s && s.length <= max ? s : undefined;
+  };
+
+  if ('full_name' in b) {
+    const n = str(b.full_name);
+    if (!n || n.length < 2 || n.length > 120) return bad('Name must be 2–120 characters');
+    out.full_name = n;
+  }
+  if ('phone' in b) {
+    if (b.phone == null || b.phone === '') out.phone = null;
+    else {
+      const p = str(b.phone);
+      if (!p || !/^\+998[0-9]{9}$/.test(p)) return bad('Phone must look like +998901234567');
+      out.phone = p;
+    }
+  }
+  for (const [key, max] of [['position', 80], ['department', 80], ['notes', 1000]] as const) {
+    if (!(key in b)) continue;
+    const v = text(key, max);
+    if (v === undefined) return bad(`${key} is too long (max ${max} characters)`);
+    out[key] = v;
+  }
+  if ('salary' in b) {
+    if (b.salary == null || b.salary === '') out.salary = null;
+    else if (typeof b.salary === 'number' && Number.isFinite(b.salary) && b.salary >= 0 && b.salary <= 1e12) out.salary = b.salary;
+    else return bad('Salary must be a positive number');
+  }
+  if ('salary_currency' in b) {
+    if (!oneOf(CURRENCIES, b.salary_currency)) return bad('Invalid currency');
+    out.salary_currency = b.salary_currency;
+  }
+  if ('hired_at' in b) {
+    if (!isDate(b.hired_at)) return bad('Invalid hire date');
+    out.hired_at = b.hired_at;
+  }
+  if ('left_at' in b) {
+    if (b.left_at == null || b.left_at === '') out.left_at = null;
+    else if (isDate(b.left_at)) out.left_at = b.left_at;
+    else return bad('Invalid leaving date');
+  }
+  if ('status' in b) {
+    if (!oneOf(EMPLOYEE_STATUSES, b.status)) return bad('Invalid status');
+    out.status = b.status;
+    // keep the pair consistent: an active person has no leaving date, a leaver always has one
+    if (b.status === 'active') out.left_at = null;
+    else if (!out.left_at) out.left_at = new Date().toISOString().slice(0, 10);
+  }
+  if (Object.keys(out).length === 0) return bad('Nothing to update');
+  return { ok: true, data: out };
+}

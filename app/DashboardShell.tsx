@@ -9,6 +9,7 @@ import {
   BriefcaseBusiness,
   Users,
   ChartColumn,
+  UserRoundCheck,
   Settings,
   PanelLeft,
   Menu,
@@ -37,6 +38,11 @@ const navigation = [
     labelKey: "shell.nav.applicants" as MessageKey,
     href: "/applicants",
     icon: Users,
+  },
+  {
+    labelKey: "shell.nav.employees" as MessageKey,
+    href: "/employees",
+    icon: UserRoundCheck,
   },
   {
     labelKey: "shell.nav.analytics" as MessageKey,
