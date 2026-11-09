@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ApiError } from '@/lib/api-client';
 import { LOGIN_PATH } from '@/lib/hr-redirect';
 import { getCached, setCached } from '@/lib/data-cache';
-import { fetchEmployees, updateEmployee, type Employee, type EmployeePatch } from '@/lib/employees';
+import { createEmployee, fetchEmployees, updateEmployee, type Employee, type EmployeePatch, type NewEmployee } from '@/lib/employees';
 
 const CACHE_KEY = 'employees';
 type LoadState = 'loading' | 'ok' | 'error';
@@ -60,5 +60,15 @@ export function useEmployees() {
     return saved;
   }, []);
 
-  return { employees, state, errorStatus, retry, save };
+  const add = useCallback(async (data: NewEmployee): Promise<Employee> => {
+    const created = await createEmployee(data);
+    setEmployees((list) => {
+      const next = [created, ...list];
+      setCached(CACHE_KEY, next);
+      return next;
+    });
+    return created;
+  }, []);
+
+  return { employees, state, errorStatus, retry, save, add };
 }

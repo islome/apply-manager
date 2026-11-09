@@ -178,6 +178,24 @@ export type EmployeeInput = {
 const isDate = (v: unknown): v is string =>
   typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 
+/** POST body for an employee added by hand: name required, the rest as in PATCH. */
+export function parseNewEmployee(body: unknown): Ok<EmployeeInput & { full_name: string; add_to_count: boolean }> | Bad {
+  if (!body || typeof body !== 'object') return bad('Invalid request body');
+  const b = body as Record<string, unknown>;
+  if (!str(b.full_name)) return bad('Name must be 2–120 characters');
+  const parsed = parseEmployee({ ...b, status: 'active', left_at: null });
+  if (!parsed.ok) return parsed;
+  return {
+    ok: true,
+    data: {
+      ...parsed.data,
+      full_name: parsed.data.full_name as string,
+      hired_at: parsed.data.hired_at ?? new Date().toISOString().slice(0, 10),
+      add_to_count: b.add_to_count === true,
+    },
+  };
+}
+
 /** PATCH body for a hired employee: every key optional, unknown keys ignored. */
 export function parseEmployee(body: unknown): Ok<EmployeeInput> | Bad {
   if (!body || typeof body !== 'object') return bad('Invalid request body');

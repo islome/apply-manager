@@ -8,7 +8,9 @@ export type EmployeeCurrency = 'UZS' | 'USD';
 
 export type Employee = {
   id: string;
-  application_id: string;
+  application_id: string | null;
+  /** 'application' = hired through the pipeline, 'manual' = added by the HR */
+  source: 'application' | 'manual';
   candidate_id: string | null;
   full_name: string;
   phone: string | null;
@@ -28,6 +30,16 @@ export type Employee = {
 export type EmployeePatch = Partial<
   Pick<Employee, 'full_name' | 'phone' | 'position' | 'department' | 'salary' | 'salary_currency' | 'hired_at' | 'status' | 'left_at' | 'notes'>
 >;
+
+export type NewEmployee = EmployeePatch & {
+  full_name: string;
+  /** also raise the company headcount (Settings) by one */
+  add_to_count?: boolean;
+};
+
+export function createEmployee(data: NewEmployee): Promise<Employee> {
+  return apiJson<Employee>('/api/hr/employees', { method: 'POST', body: data });
+}
 
 export function fetchEmployees(signal?: AbortSignal): Promise<Employee[]> {
   return apiJson<Employee[]>('/api/hr/employees', { signal }).then((rows) => (Array.isArray(rows) ? rows : []));

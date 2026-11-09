@@ -61,6 +61,19 @@ const uz = {
   'emp.rejoinHint': 'Kompaniya xodimlari soni {from} dan {to} ga o‘zgaradi.',
   'emp.leftBanner': 'Bu xodim ishdan ketgan ({date}). Soni hisobdan chiqarilgan.',
   'emp.moreLabel': '{name} ni tahrirlash',
+  'emp.companyTitle': 'Kompaniya xodimlari',
+  'emp.companySubtitle': 'Kompaniyada ishlayotgan hamma xodimlar: arizadan qabul qilinganlar va qo‘lda qo‘shilganlar.',
+  'emp.back': 'Ishga qabul qilinganlar',
+  'emp.kpiCompanyHintHere': 'Hozir shu ro‘yxatni ko‘ryapsiz',
+  'emp.add': 'Xodim qo‘shish',
+  'emp.addTitle': 'Xodim qo‘shish',
+  'emp.addHint': 'Allaqachon ishlayotgan xodimni qo‘lda kiriting.',
+  'emp.addSubmit': 'Qo‘shish',
+  'emp.addToCount': 'Kompaniya xodimlari soniga qo‘shish',
+  'emp.addToCountOff': 'Odatda kerak emas: hozirgi son bu xodimni allaqachon o‘z ichiga olgan.',
+  'emp.addToCountOn': 'Xodimlar soni bittaga oshadi.',
+  'emp.sourceManual': 'Qo‘lda',
+  'emp.emptyHintCompany': '«Xodim qo‘shish» tugmasi bilan kompaniyada ishlayotgan odamlarni kiriting.',
 };
 
 const en: Dict<typeof uz> = {
@@ -124,6 +137,19 @@ const en: Dict<typeof uz> = {
   'emp.rejoinHint': 'Company headcount goes from {from} to {to}.',
   'emp.leftBanner': 'This employee left ({date}). They are no longer counted.',
   'emp.moreLabel': 'Edit {name}',
+  'emp.companyTitle': 'Company employees',
+  'emp.companySubtitle': 'Everyone who works at the company: hired through applications and added by hand.',
+  'emp.back': 'Hired employees',
+  'emp.kpiCompanyHintHere': 'You are viewing this list',
+  'emp.add': 'Add employee',
+  'emp.addTitle': 'Add employee',
+  'emp.addHint': 'Enter someone who already works here.',
+  'emp.addSubmit': 'Add',
+  'emp.addToCount': 'Add to the company headcount',
+  'emp.addToCountOff': 'Usually not needed: the current number already includes this person.',
+  'emp.addToCountOn': 'The headcount goes up by one.',
+  'emp.sourceManual': 'Manual',
+  'emp.emptyHintCompany': 'Use “Add employee” to enter the people who already work at the company.',
 };
 
 const ru: Dict<typeof uz> = {
@@ -187,6 +213,19 @@ const ru: Dict<typeof uz> = {
   'emp.rejoinHint': 'Штат компании изменится с {from} на {to}.',
   'emp.leftBanner': 'Этот сотрудник ушёл ({date}). В штате он больше не учитывается.',
   'emp.moreLabel': 'Редактировать: {name}',
+  'emp.companyTitle': 'Сотрудники компании',
+  'emp.companySubtitle': 'Все, кто работает в компании: принятые по заявкам и добавленные вручную.',
+  'emp.back': 'Принятые сотрудники',
+  'emp.kpiCompanyHintHere': 'Вы смотрите этот список',
+  'emp.add': 'Добавить сотрудника',
+  'emp.addTitle': 'Добавление сотрудника',
+  'emp.addHint': 'Введите человека, который уже работает у вас.',
+  'emp.addSubmit': 'Добавить',
+  'emp.addToCount': 'Добавить к штату компании',
+  'emp.addToCountOff': 'Обычно не нужно: текущее число уже включает этого человека.',
+  'emp.addToCountOn': 'Штат увеличится на единицу.',
+  'emp.sourceManual': 'Вручную',
+  'emp.emptyHintCompany': 'Кнопкой «Добавить сотрудника» внесите людей, которые уже работают в компании.',
 };
 
 const messages = { uz, en, ru };

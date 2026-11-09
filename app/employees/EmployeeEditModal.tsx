@@ -4,16 +4,18 @@ import { useState, type FormEvent } from 'react';
 import { ArrowRight, UserMinus, UserRoundCheck, X } from 'lucide-react';
 import { ApiError } from '@/lib/api-client';
 import { initials } from '@/lib/applications';
-import { todayISO, type Employee, type EmployeePatch } from '@/lib/employees';
+import { todayISO, type Employee, type EmployeePatch, type NewEmployee } from '@/lib/employees';
 import { formatDate } from '@/i18n/format';
 import { useLanguage } from '@/i18n/LanguageProvider';
 
 type Props = {
-  employee: Employee;
+  /** null = add a new employee by hand */
+  employee: Employee | null;
   /** Current company headcount (Settings), null while unknown */
   headcount: number | null;
   onClose: () => void;
   onSave: (id: string, patch: EmployeePatch) => Promise<Employee>;
+  onCreate?: (data: NewEmployee) => Promise<Employee>;
   /** Called after a status change so the page can refresh the headcount */
   onStatusChanged: () => void;
 };
@@ -40,8 +42,29 @@ function CountShift({ from, to }: { from: number | null; to: number | null }) {
   );
 }
 
-export default function EmployeeEditModal({ employee, headcount, onClose, onSave, onStatusChanged }: Props) {
+export default function EmployeeEditModal({ employee: existing, headcount, onClose, onSave, onCreate, onStatusChanged }: Props) {
   const { t, lang } = useLanguage();
+  const isNew = existing === null;
+  const [blank] = useState<Employee>(() => ({
+    id: '',
+    application_id: null,
+    source: 'manual',
+    candidate_id: null,
+    full_name: '',
+    phone: null,
+    position: null,
+    department: null,
+    salary: null,
+    salary_currency: 'UZS',
+    hired_at: todayISO(),
+    status: 'active',
+    left_at: null,
+    notes: null,
+    created_at: '',
+    updated_at: '',
+  }));
+  const employee = existing ?? blank;
+  const [addToCount, setAddToCount] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [leaving, setLeaving] = useState(false);
@@ -52,8 +75,13 @@ export default function EmployeeEditModal({ employee, headcount, onClose, onSave
     setBusy(true);
     setError('');
     try {
-      await onSave(employee.id, patch);
-      if (statusChange) onStatusChanged();
+      if (isNew) {
+        await onCreate?.({ ...patch, full_name: patch.full_name ?? '', add_to_count: addToCount });
+        onStatusChanged(); // the headcount may have changed
+      } else {
+        await onSave(employee.id, patch);
+        if (statusChange) onStatusChanged();
+      }
       onClose();
     } catch (e) {
       setError(
@@ -116,9 +144,9 @@ export default function EmployeeEditModal({ employee, headcount, onClose, onSave
           </span>
           <div className="min-w-0 flex-1">
             <h2 id="edit-employee-title" className="truncate text-base font-semibold text-zinc-900">
-              {t('emp.editTitle')}
+              {t(isNew ? 'emp.addTitle' : 'emp.editTitle')}
             </h2>
-            <p className="truncate text-sm text-zinc-500">{employee.full_name}</p>
+            <p className="truncate text-sm text-zinc-500">{isNew ? t('emp.addHint') : employee.full_name}</p>
           </div>
           <button
             type="button"
@@ -139,7 +167,7 @@ export default function EmployeeEditModal({ employee, headcount, onClose, onSave
               </p>
             )}
 
-            {isLeft && (
+            {!isNew && isLeft && (
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800">
                 {t('emp.leftBanner', { date: employee.left_at ? formatDate(employee.left_at, lang) : '—' })}
               </p>
@@ -215,7 +243,23 @@ export default function EmployeeEditModal({ employee, headcount, onClose, onSave
             </Section>
 
             {/* Status change: leave / re-hire. Changes the company headcount, so it is explicit. */}
-            {isLeft ? (
+            {isNew ? (
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                <input
+                  type="checkbox"
+                  checked={addToCount}
+                  onChange={(e) => setAddToCount(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-zinc-300 accent-blue-600"
+                />
+                <span className="min-w-0 space-y-1">
+                  <span className="block text-sm font-medium text-zinc-900">{t('emp.addToCount')}</span>
+                  <span className="flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+                    {t(addToCount ? 'emp.addToCountOn' : 'emp.addToCountOff')}
+                    {addToCount && <CountShift from={headcount} to={afterRejoin} />}
+                  </span>
+                </span>
+              </label>
+            ) : isLeft ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
                 <div className="min-w-0 space-y-1">
                   <p className="text-sm font-medium text-zinc-900">{t('emp.rejoin')}</p>
@@ -295,7 +339,7 @@ export default function EmployeeEditModal({ employee, headcount, onClose, onSave
               disabled={busy}
               className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
             >
-              {busy ? t('common.saving') : t('common.save')}
+              {busy ? t('common.saving') : t(isNew ? 'emp.addSubmit' : 'common.save')}
             </button>
           </footer>
         </form>
