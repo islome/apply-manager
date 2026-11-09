@@ -6,6 +6,53 @@ import { APPLICATION_STATUSES } from '@/lib/hr-validate';
 import { notifyStatusChange } from '@/lib/telegram-notify';
 
 
+type Db = ReturnType<typeof supabaseAdmin>;
+
+/**
+ * Keeps the "Employees" list in step with the pipeline: reaching `hired` adds the person (or
+ * re-activates someone who had left), leaving `hired` removes the record. The DB trigger
+ * (supabase/008) adjusts the company headcount. A failure here never blocks the status change.
+ */
+async function syncEmployee(
+  db: Db,
+  applicationId: string,
+  from: string,
+  to: string,
+  info: { hrId: string; candidate: { id?: string; full_name?: string; phone?: string | null } | null; vacancyTitle?: string },
+) {
+  try {
+    if (to === 'hired') {
+      const { data: existing } = await db
+        .from('hired_employees')
+        .select('id, status')
+        .eq('application_id', applicationId)
+        .maybeSingle();
+      if (!existing) {
+        const { error } = await db.from('hired_employees').insert({
+          application_id: applicationId,
+          candidate_id: info.candidate?.id ?? null,
+          hr_user_id: info.hrId,
+          full_name: info.candidate?.full_name?.trim() || 'Unknown',
+          phone: info.candidate?.phone ?? null,
+          position: info.vacancyTitle ?? null,
+        });
+        if (error) console.error('[employees] insert failed', error);
+      } else if (existing.status === 'left') {
+        const { error } = await db
+          .from('hired_employees')
+          .update({ status: 'active', left_at: null })
+          .eq('id', existing.id);
+        if (error) console.error('[employees] reactivate failed', error);
+      }
+    } else if (from === 'hired') {
+      const { error } = await db.from('hired_employees').delete().eq('application_id', applicationId);
+      if (error) console.error('[employees] delete failed', error);
+    }
+  } catch (e) {
+    console.error('[employees] sync failed', e);
+  }
+}
+
 type Ctx = { params: Promise<{ id: string }> };
 
 // Moves an application between pipeline stages. Body: { status }
@@ -27,7 +74,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   // Oldingi status va nomzod (xabar faqat status haqiqatan o'zgarsa yuboriladi)
   const { data: before, error: beforeError } = await db
     .from('applications')
-    .select('*, candidate:candidates(telegram_id, full_name), vacancy:vacancies(title, hr_user_id)')
+    .select('*, candidate:candidates(id, telegram_id, full_name, phone), vacancy:vacancies(title, hr_user_id)')
     .eq('id', id)
     .single();
   if (beforeError) return dbFail(beforeError);
@@ -49,9 +96,24 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   if (error) return dbFail(error);
 
   if (before.status !== status) {
+    await syncEmployee(db, id, before.status, status, {
+      hrId: auth.hr.id,
+      candidate: Array.isArray(before.candidate) ? before.candidate[0] : before.candidate,
+      vacancyTitle: owner.title,
+    });
     const candidate = Array.isArray(before.candidate) ? before.candidate[0] : before.candidate;
     const vacancy = Array.isArray(before.vacancy) ? before.vacancy[0] : before.vacancy;
-    if (candidate?.telegram_id) {
+    // Nomzod sozlamalarda bildirishnomani o'chirgan bo'lsa yubormaymiz (ustun yo'q bo'lsa: yuboramiz)
+    let wantsNotify = true;
+    if (candidate?.id) {
+      const { data: pref } = await db
+        .from('candidates')
+        .select('notify_status')
+        .eq('id', candidate.id)
+        .maybeSingle();
+      if (pref && pref.notify_status === false) wantsNotify = false;
+    }
+    if (candidate?.telegram_id && wantsNotify) {
       await notifyStatusChange(candidate.telegram_id, status, {
         vacancyTitle: vacancy?.title,
         fullName: candidate.full_name,
