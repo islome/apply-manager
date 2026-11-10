@@ -19,6 +19,18 @@
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --animate-fade-up: fade-up 420ms var(--ease-smooth) both;
   --animate-image-in: image-in 1600ms var(--ease-smooth) both;
+  --animate-peek-in: peek-in 240ms var(--ease-smooth) both;
+
+  @keyframes peek-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 
   @keyframes fade-up {
     from {

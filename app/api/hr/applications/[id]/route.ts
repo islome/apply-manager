@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireHr } from '@/lib/hr-auth';
 import { dbFail, fail, isUuid, readJson } from '@/lib/hr-http';
-import { APPLICATION_STATUSES } from '@/lib/hr-validate';
+import { loadStages } from '@/lib/hr-stages';
 import { notifyStatusChange } from '@/lib/telegram-notify';
 
 
@@ -65,11 +65,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
   const body = (await readJson(req)) as { status?: unknown } | null;
   const status = body?.status;
-  if (typeof status !== 'string' || !(APPLICATION_STATUSES as readonly string[]).includes(status)) {
-    return fail(400, 'Invalid status');
-  }
+  if (typeof status !== 'string') return fail(400, 'Invalid status');
 
   const db = supabaseAdmin();
+
+  // The target must be one of this HR's pipeline stages (the 5 defaults until they customise them)
+  const pipeline = await loadStages(db, auth.hr.id);
+  if (!pipeline.ok) return dbFail(pipeline.error);
+  const stage = pipeline.stages.find((s) => s.key === status);
+  if (!stage) return fail(400, 'Invalid status');
 
   // Oldingi status va nomzod (xabar faqat status haqiqatan o'zgarsa yuboriladi)
   const { data: before, error: beforeError } = await db
@@ -117,6 +121,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       await notifyStatusChange(candidate.telegram_id, status, {
         vacancyTitle: vacancy?.title,
         fullName: candidate.full_name,
+        stageLabel: stage.label,
       });
     }
   }

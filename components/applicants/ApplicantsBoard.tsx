@@ -3,15 +3,17 @@
 import { useMemo, useRef, useState, type DragEvent } from "react";
 import { useApplications } from "@/hooks/useApplications";
 import { useT } from "@/i18n/LanguageProvider";
+import { Plus } from "lucide-react";
 import {
-  STAGES,
   applicationsToCsv,
   matchesSearch,
   personName,
-  stageLabel,
   type Application,
   type StageId,
 } from "@/lib/applications";
+import { useStages } from "@/hooks/useStages";
+import { boardKey, statusName, stageName } from "@/lib/stages";
+import StageManager from "./StageManager";
 import ApplicantCard from "./ApplicantCard";
 import ApplicantDetails from "./ApplicantDetails";
 import ApplicantList from "./ApplicantList";
@@ -26,12 +28,17 @@ type View = "board" | "list";
 export default function ApplicantsBoard() {
   const t = useT();
   const { applications, state, error, move, retry } = useApplications();
+  const { stages, migrated, save: saveStages } = useStages();
+  const [managing, setManaging] = useState(false);
 
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState<StageFilter>("all");
   const [vacancyId, setVacancyId] = useState("all");
   const [view, setView] = useState<View>("board");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [slot, setSlot] = useState(0); // index of the open applicant in what the HR sees
+  // true after a stage change from the details window: next / previous continue from the old slot
+  const [anchored, setAnchored] = useState(false);
   const [limits, setLimits] = useState<Partial<Record<StageId, number>>>({});
   const [dragId, setDragId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<StageId | null>(null);
@@ -66,27 +73,31 @@ export default function ApplicantsBoard() {
   );
 
   const byStage = useMemo(() => {
-    const groups: Record<StageId, Application[]> = {
-      new: [],
-      confirmed: [],
-      interview: [],
-      hired: [],
-      cancel: [],
-    };
-    for (const a of base) groups[a.status].push(a);
-    for (const id of Object.keys(groups) as StageId[]) {
+    const groups: Record<StageId, Application[]> = Object.fromEntries(stages.map((s) => [s.key, []]));
+    for (const a of base) groups[boardKey(a.status, stages)].push(a);
+    for (const id of Object.keys(groups)) {
       groups[id].sort(
         (x, y) =>
           new Date(y.updated_at).getTime() - new Date(x.updated_at).getTime(),
       );
     }
     return groups;
-  }, [base]);
+  }, [base, stages]);
+
+  // a filter pointing at a stage that was just deleted falls back to "all"
+  const activeStage: StageFilter = stage !== "all" && byStage[stage] ? stage : "all";
 
   const listRows = useMemo(
-    () => (stage === "all" ? base : byStage[stage]),
-    [base, byStage, stage],
+    () => (activeStage === "all" ? base : byStage[activeStage]),
+    [base, byStage, activeStage],
   );
+
+  // applications per stage across everything (not just the filtered set): the modal blocks deleting busy stages
+  const stageCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const a of applications) counts[a.status] = (counts[a.status] ?? 0) + 1;
+    return counts;
+  }, [applications]);
 
   const opened = openId
     ? (applications.find((a) => a.id === openId) ?? null)
@@ -97,7 +108,7 @@ export default function ApplicantsBoard() {
     const a = applications.find((x) => x.id === id);
     if (!a) return;
     const res = await move(id, target);
-    if (res.ok) notify(t("app.movedTo", { name: personName(a), stage: stageLabel(target, t) }));
+    if (res.ok) notify(t("app.movedTo", { name: personName(a), stage: statusName(target, stages, t) }));
     else if (res.message) notify(res.message);
   }
 
@@ -119,7 +130,7 @@ export default function ApplicantsBoard() {
   }
 
   function exportCsv() {
-    const blob = new Blob([applicationsToCsv(listRows)], {
+    const blob = new Blob([applicationsToCsv(listRows, (status) => statusName(status, stages, t))], {
       type: "text/csv;charset=utf-8;",
     });
     const url = URL.createObjectURL(blob);
@@ -135,7 +146,35 @@ export default function ApplicantsBoard() {
 
   /* ---------------------------------------------------------------- render */
   const shownStages =
-    stage === "all" ? STAGES : STAGES.filter((s) => s.id === stage);
+    activeStage === "all" ? stages : stages.filter((s) => s.key === activeStage);
+
+  // previous / next in the details window follow exactly what the HR sees: board columns or list rows
+  const sequence =
+    view === "list" ? listRows.map((a) => a.id) : shownStages.flatMap((s) => (byStage[s.key] ?? []).map((a) => a.id));
+  const openIndex = openId ? sequence.indexOf(openId) : -1;
+  // If the open applicant leaves the view (moved out of the filtered stage), "next" lands on
+  // whoever took their slot and "previous" on the one before it.
+  // Same after a stage change from the window: triage carries on with the card that followed.
+  const fromSlot = openIndex < 0 || anchored;
+  const prevIndex = fromSlot ? slot - 1 : openIndex - 1;
+  const nextIndex = fromSlot ? slot : openIndex + 1;
+
+  function openApplicant(id: string) {
+    setOpenId(id);
+    setSlot(Math.max(0, sequence.indexOf(id)));
+    setAnchored(false);
+  }
+  function moveFromDetails(id: string, target: StageId) {
+    if (openIndex >= 0 && !anchored) setSlot(openIndex);
+    setAnchored(true);
+    void moveTo(id, target);
+  }
+  function step(dir: -1 | 1) {
+    let target = dir < 0 ? prevIndex : nextIndex;
+    if (sequence[target] === openId) target += dir; // moved back to an earlier column: skip itself
+    const id = sequence[target];
+    if (id) openApplicant(id);
+  }
 
   return (
     <div className="w-full">
@@ -237,9 +276,9 @@ export default function ApplicantsBoard() {
         <button
           type="button"
           onClick={() => setStage("all")}
-          aria-pressed={stage === "all"}
+          aria-pressed={activeStage === "all"}
           className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-            stage === "all"
+            activeStage === "all"
               ? "bg-white text-zinc-900 ring-1 ring-zinc-200"
               : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
           }`}
@@ -249,13 +288,13 @@ export default function ApplicantsBoard() {
             {base.length}
           </span>
         </button>
-        {STAGES.map((s) => {
-          const active = stage === s.id;
+        {stages.map((s) => {
+          const active = activeStage === s.key;
           return (
             <button
-              key={s.id}
+              key={s.key}
               type="button"
-              onClick={() => setStage(active ? "all" : s.id)}
+              onClick={() => setStage(active ? "all" : s.key)}
               aria-pressed={active}
               className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 active
@@ -263,14 +302,23 @@ export default function ApplicantsBoard() {
                   : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
               }`}
             >
-              <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-              {stageLabel(s.id, t)}
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: s.color }} />
+              {stageName(s, t)}
               <span className="text-xs tabular-nums text-zinc-500">
-                {byStage[s.id].length}
+                {byStage[s.key]?.length ?? 0}
               </span>
             </button>
           );
         })}
+        <button
+          type="button"
+          onClick={() => setManaging(true)}
+          aria-label={t("stages.manage")}
+          title={t("stages.manage")}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 ring-1 ring-inset ring-zinc-200 transition-colors hover:bg-white hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+        >
+          <Plus size={16} />
+        </button>
       </div>
 
       {/* body */}
@@ -279,9 +327,9 @@ export default function ApplicantsBoard() {
           className="grid grid-flow-col auto-cols-[minmax(248px,1fr)] gap-3 overflow-x-auto"
           aria-busy="true"
         >
-          {STAGES.map((s) => (
+          {stages.map((s) => (
             <div
-              key={s.id}
+              key={s.key}
               className="h-55 animate-pulse rounded-xl bg-zinc-100"
             />
           ))}
@@ -319,7 +367,8 @@ export default function ApplicantsBoard() {
       {state === "ok" && applications.length > 0 && view === "list" && (
         <ApplicantList
           rows={listRows}
-          onOpen={setOpenId}
+          stages={stages}
+          onOpen={openApplicant}
           onMove={(id, s) => void moveTo(id, s)}
         />
       )}
@@ -327,40 +376,40 @@ export default function ApplicantsBoard() {
       {state === "ok" && applications.length > 0 && view === "board" && (
         <div
           className={
-            stage === "all"
+            activeStage === "all"
               ? "grid grid-flow-col auto-cols-[minmax(248px,1fr)] gap-3 overflow-x-auto pb-3"
               : "grid max-w-md grid-cols-1 gap-3 pb-3"
           }
         >
           {shownStages.map((s) => {
-            const items = byStage[s.id];
-            const limit = limits[s.id] ?? PAGE;
-            const over = overStage === s.id;
+            const items = byStage[s.key] ?? [];
+            const limit = limits[s.key] ?? PAGE;
+            const over = overStage === s.key;
             return (
               <section
-                key={s.id}
-                aria-labelledby={`stage-${s.id}`}
+                key={s.key}
+                aria-labelledby={`stage-${s.key}`}
                 className={`flex min-h-40 flex-col rounded-xl p-2 transition-colors ${
                   over ? "bg-zinc-100 ring-1 ring-zinc-300" : "bg-zinc-100/70"
                 }`}
                 onDragOver={(e) => {
                   e.preventDefault();
                   e.dataTransfer.dropEffect = "move";
-                  if (overStage !== s.id) setOverStage(s.id);
+                  if (overStage !== s.key) setOverStage(s.key);
                 }}
                 onDragLeave={(e) => {
                   if (!e.currentTarget.contains(e.relatedTarget as Node | null))
                     setOverStage(null);
                 }}
-                onDrop={(e) => onDrop(e, s.id)}
+                onDrop={(e) => onDrop(e, s.key)}
               >
                 <div className="flex items-center justify-between px-2 pb-2.5 pt-1.5">
                   <h2
-                    id={`stage-${s.id}`}
-                    className="flex items-center gap-2 text-sm font-medium text-zinc-900"
+                    id={`stage-${s.key}`}
+                    className="flex min-w-0 items-center gap-2 text-sm font-medium text-zinc-900"
                   >
-                    <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-                    {stageLabel(s.id, t)}
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
+                    <span className="truncate">{stageName(s, t)}</span>
                   </h2>
                   <span className="text-xs tabular-nums text-zinc-500">
                     {items.length}
@@ -373,7 +422,7 @@ export default function ApplicantsBoard() {
                       key={a.id}
                       a={a}
                       dragging={dragId === a.id}
-                      onOpen={setOpenId}
+                      onOpen={openApplicant}
                       onDragStart={onDragStart}
                       onDragEnd={onDragEnd}
                     />
@@ -391,7 +440,7 @@ export default function ApplicantsBoard() {
                     <button
                       type="button"
                       onClick={() =>
-                        setLimits((l) => ({ ...l, [s.id]: limit + PAGE }))
+                        setLimits((l) => ({ ...l, [s.key]: limit + PAGE }))
                       }
                       className="shrink-0 rounded-lg py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-200/60 hover:text-zinc-900"
                     >
@@ -407,10 +456,27 @@ export default function ApplicantsBoard() {
 
       <ApplicantDetails
         a={opened}
+        stages={stages}
+        position={openIndex >= 0 ? { index: openIndex, total: sequence.length } : null}
+        onPrev={prevIndex >= 0 && prevIndex < sequence.length ? () => step(-1) : undefined}
+        onNext={nextIndex >= 0 && nextIndex < sequence.length ? () => step(1) : undefined}
         onClose={() => setOpenId(null)}
-        onMove={(id, s) => void moveTo(id, s)}
+        onMove={moveFromDetails}
         onNotify={notify}
       />
+
+      {managing && (
+        <StageManager
+          stages={stages}
+          counts={stageCounts}
+          migrated={migrated}
+          onSave={saveStages}
+          onClose={(saved) => {
+            setManaging(false);
+            if (saved) notify(t("stages.saved"));
+          }}
+        />
+      )}
 
       <div
         role="status"

@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Plus } from "lucide-react";
-import { STAGES, stageLabel, timeAgo } from "@/lib/applications";
+import { timeAgo } from "@/lib/applications";
+import { useStages } from "@/hooks/useStages";
+import { stageColor, stageName, statusName, type Stage } from "@/lib/stages";
 import { useLanguage, type TFunction } from "@/i18n/LanguageProvider";
 import { LOCALES, type Lang } from "@/i18n/types";
 import { majorLabel } from "@/lib/vacancy-options";
@@ -40,9 +42,8 @@ type DashboardData = {
 const DAY = 86_400_000;
 const STALE_DAYS = 3; // a "new" application waiting longer than this needs attention
 
-function stageOf(status: string, t: TFunction): { label: string; dot: string } {
-  const stage = STAGES.find((s) => s.id === status);
-  return { label: stage ? stageLabel(stage.id, t) : status, dot: stage?.dot ?? "bg-zinc-400" };
+function stageOf(status: string, stages: Stage[], t: TFunction): { label: string; color: string } {
+  return { label: statusName(status, stages, t), color: stageColor(status, stages) };
 }
 
 function relation<T>(value: T | T[] | null): T | null {
@@ -152,6 +153,7 @@ function Skeleton({ className }: { className: string }) {
 
 export default function DashboardPage() {
   const { lang, t } = useLanguage();
+  const { stages } = useStages();
   const ago = (value: string) => timeAgo(value, t, lang, nowMs);
   const [data, setData] = useState<DashboardData | null>(() => getCached<DashboardData>("dashboard") ?? null);
   const [loading, setLoading] = useState(() => !getCached("dashboard"));
@@ -232,10 +234,11 @@ export default function DashboardPage() {
     .sort((x, y) => y.count - x.count || Number(y.is_active) - Number(x.is_active));
   const emptyActive = vacancyRows.filter((v) => v.is_active && v.count === 0);
 
-  const stageCounts = STAGES.map((s) => ({
-    id: s.id as string,
-    ...stageOf(s.id, t),
-    count: applications.filter((a) => a.status === s.id).length,
+  const stageCounts = stages.map((s) => ({
+    id: s.key,
+    label: stageName(s, t),
+    color: s.color,
+    count: applications.filter((a) => a.status === s.key).length,
   }));
 
   const categories = applications.reduce<Record<string, number>>((counts, a) => {
@@ -431,7 +434,7 @@ export default function DashboardPage() {
                       const c = relation(a.candidate);
                       const v = relation(a.vacancy);
                       const name = c?.full_name || t("dash.unknownCandidate");
-                      const stage = stageOf(a.status, t);
+                      const stage = stageOf(a.status, stages, t);
 
                       return (
                         <tr key={a.id} className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50/70">
@@ -451,7 +454,7 @@ export default function DashboardPage() {
                           <td className="whitespace-nowrap px-4 py-2.5 text-xs text-zinc-500">{ago(a.created_at)}</td>
                           <td className="px-4 py-2.5">
                             <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-zinc-700">
-                              <span className={`h-1.5 w-1.5 rounded-full ${stage.dot}`} />
+                              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: stage.color }} />
                               {stage.label}
                             </span>
                           </td>
@@ -477,7 +480,7 @@ export default function DashboardPage() {
                   <li key={s.id}>
                     <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
                       <span className="flex items-center gap-2 text-zinc-700">
-                        <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: s.color }} />
                         {s.label}
                       </span>
                       <span className="tabular-nums text-zinc-900">
@@ -486,7 +489,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100">
-                      <div className={`h-full rounded-full ${s.dot}`} style={{ width: `${(s.count / total) * 100}%` }} />
+                      <div className="h-full rounded-full bg-zinc-800" style={{ width: `${(s.count / total) * 100}%` }} />
                     </div>
                   </li>
                 ))}

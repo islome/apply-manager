@@ -3,7 +3,6 @@
 
 export const EMPLOYMENT_TYPES = ['full_time', 'part_time', 'remote', 'internship'] as const;
 export const CURRENCIES = ['UZS', 'USD'] as const;
-export const APPLICATION_STATUSES = ['new', 'confirmed', 'interview', 'hired', 'cancel'] as const;
 
 const MAX_INT = 2147483647; // Postgres integer
 
