@@ -8,6 +8,7 @@ import { useLanguage, type TFunction } from "@/i18n/LanguageProvider";
 import { LOCALES, type Lang } from "@/i18n/types";
 import { majorLabel } from "@/lib/vacancy-options";
 import Avatar from "@/components/applicants/Avatar";
+import ApplicationTrend from "@/components/dashboard/ApplicationTrend";
 import { getCached, setCached } from "@/lib/data-cache";
 
 type Vacancy = {
@@ -50,10 +51,6 @@ function relation<T>(value: T | T[] | null): T | null {
 
 function longDate(d: Date, lang: Lang) {
   return d.toLocaleDateString(LOCALES[lang], { day: "numeric", month: "long", year: "numeric", weekday: "long" });
-}
-
-function shortDate(d: Date, lang: Lang) {
-  return d.toLocaleDateString(LOCALES[lang], { day: "numeric", month: "short" });
 }
 
 function startOfDay(d: Date) {
@@ -241,13 +238,6 @@ export default function DashboardPage() {
     count: applications.filter((a) => a.status === s.id).length,
   }));
 
-  const days = Array.from({ length: 14 }, (_, i) => {
-    const dayStart = now ? startOfDay(now) - (13 - i) * DAY : 0;
-    const count = applications.filter((a) => startOfDay(new Date(a.created_at)) === dayStart).length;
-    return { date: new Date(dayStart), count };
-  });
-  const maxDay = Math.max(1, ...days.map((d) => d.count));
-
   const categories = applications.reduce<Record<string, number>>((counts, a) => {
     const candidate = relation(a.candidate);
     const vacancy = relation(a.vacancy);
@@ -393,32 +383,7 @@ export default function DashboardPage() {
 
       <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
         <div className="space-y-6">
-          <Card title={t("dash.trend.title")} subtitle={t("dash.trend.subtitle")}>
-            {!ready ? (
-              <Skeleton className="h-28" />
-            ) : (
-              <>
-                <div
-                  role="img"
-                  aria-label={t("dash.trend.aria", { n: days.reduce((s, d) => s + d.count, 0) })}
-                  className="flex h-28 items-end gap-1.5"
-                >
-                  {days.map((d, i) => (
-                    <div
-                      key={i}
-                      title={t("dash.trend.bar", { date: shortDate(d.date, lang), n: d.count })}
-                      className={`flex-1 rounded-[3px] ${d.count ? "bg-zinc-800" : "bg-zinc-100"}`}
-                      style={{ height: d.count ? `${Math.max(8, (d.count / maxDay) * 100)}%` : "2px" }}
-                    />
-                  ))}
-                </div>
-                <div className="mt-2 flex justify-between text-xs text-zinc-500">
-                  <span>{shortDate(days[0].date, lang)}</span>
-                  <span>{t("dash.trend.today")}</span>
-                </div>
-              </>
-            )}
-          </Card>
+          <ApplicationTrend applications={applications} now={now} ready={ready} />
 
           <section className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white">
             <div className="flex items-start justify-between gap-3 px-5 pb-4 pt-5">
