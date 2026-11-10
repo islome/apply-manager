@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Pencil, Settings } from 'lucide-react';
+import { ChevronRight, History, Pencil, Settings } from 'lucide-react';
+import Link from 'next/link';
 import { safeHttpUrl } from '@/lib/applications';
 import { formatDate } from '@/lib/vacancies';
 import { useLanguage } from '@/i18n/LanguageProvider';
@@ -225,6 +226,21 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* activity log: its own page, so it gets the full width and filters */}
+      <Link
+        href="/settings/logs"
+        className="group mt-6 flex max-w-2xl items-center gap-4 rounded-xl border border-zinc-200/80 bg-white p-5 transition-[border-color,box-shadow] hover:border-zinc-300 hover:shadow-[0_1px_3px_rgb(0_0_0/0.05)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 sm:p-6"
+      >
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-600">
+          <History size={18} strokeWidth={1.75} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold tracking-tight text-zinc-900">{t('logs.title')}</span>
+          <span className="mt-0.5 block text-sm text-zinc-500">{t('logs.subtitle')}</span>
+        </span>
+        <ChevronRight size={18} className="shrink-0 text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-zinc-900" />
+      </Link>
 
       {modalOpen && (
         <EditProfileModal profile={profile} onClose={() => setModalOpen(false)} onSaved={onSaved} />

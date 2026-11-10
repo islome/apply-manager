@@ -96,7 +96,9 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     .update(patch)
     .eq('id', id)
     .select('id, status')
-    .single();
+    .single()
+    // tells the status-log trigger (supabase/012) which HR made this change
+    .setHeader('x-hr-actor', auth.hr.id);
   if (error) return dbFail(error);
 
   if (before.status !== status) {

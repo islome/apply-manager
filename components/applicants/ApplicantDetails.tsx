@@ -15,6 +15,7 @@ import { employmentLabel, type EmploymentType } from '@/lib/vacancies';
 import { cityLabel, majorLabel } from '@/lib/vacancy-options';
 import { useLanguage } from '@/i18n/LanguageProvider';
 import Avatar from './Avatar';
+import ApplicantHistory from './ApplicantHistory';
 import { CloseIcon, DownloadIcon } from './icons';
 
 type Props = {
@@ -290,6 +291,8 @@ export default function ApplicantDetails({ a, stages, position, onPrev, onNext, 
                   </Field>
                 )}
               </dl>
+
+              <ApplicantHistory applicationId={a.id} refreshKey={`${a.status}|${a.updated_at}`} stages={stages} />
             </section>
           </div>
 
