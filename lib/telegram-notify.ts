@@ -54,12 +54,27 @@ const COPY: Record<string, Copy> = {
 
 export type StatusMessage = { text: string; button: string; url: string; sticker?: string };
 
+type MessageOpts = {
+  vacancyTitle?: string | null;
+  fullName?: string | null;
+  /** HR's name for the stage; used for custom stages that have no message of their own */
+  stageLabel?: string | null;
+};
+
+// HR o'zi qo'shgan bosqichlar uchun umumiy xabar. {s} = bosqich nomi (qalin).
+function customCopy(stageLabel: string): Copy {
+  return {
+    title: '🔔 Arizangiz bo‘yicha yangilik',
+    body: '{v} bo‘yicha arizangiz «<b>' + esc(stageLabel) + '</b>» bosqichiga o‘tkazildi.',
+    button: '📱 Ilovani ochish',
+    buttonPath: 'applications',
+  };
+}
+
 /** HR statusni o'zgartirganda nomzodga boradigan xabar (HTML), tugma va (bo'lsa) sticker. */
-export function buildStatusMessage(
-  status: string,
-  opts: { vacancyTitle?: string | null; fullName?: string | null } = {},
-): StatusMessage | null {
-  const copy = COPY[status];
+export function buildStatusMessage(status: string, opts: MessageOpts = {}): StatusMessage | null {
+  const custom = !COPY[status];
+  const copy = COPY[status] ?? (opts.stageLabel ? customCopy(opts.stageLabel) : null);
   if (!copy) return null;
 
   const vacancy = opts.vacancyTitle ? `«<b>${esc(opts.vacancyTitle)}</b>»` : 'vakansiya';
@@ -73,7 +88,7 @@ export function buildStatusMessage(
     button: copy.button,
     url: new URL(copy.buttonPath, base).toString(),
     // Ixtiyoriy: TELEGRAM_STICKER_<STATUS> = sticker file_id (cancel uchun sticker qo'yilmaydi)
-    sticker: status === 'cancel' ? undefined : env()[`TELEGRAM_STICKER_${status.toUpperCase()}`],
+    sticker: status === 'cancel' || custom ? undefined : env()[`TELEGRAM_STICKER_${status.toUpperCase()}`],
   };
 }
 
@@ -105,7 +120,7 @@ async function tg(method: string, payload: Record<string, unknown>): Promise<boo
 export async function notifyStatusChange(
   chatId: number,
   status: string,
-  opts: { vacancyTitle?: string | null; fullName?: string | null } = {},
+  opts: MessageOpts = {},
 ): Promise<void> {
   const msg = buildStatusMessage(status, opts);
   if (!msg) return;

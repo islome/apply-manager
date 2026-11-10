@@ -1,19 +1,21 @@
 'use client';
 
-import { STAGES, experienceLabel, stageLabel, isStageId, personName, timeAgo, type Application, type StageId } from '@/lib/applications';
+import { experienceLabel, personName, timeAgo, type Application, type StageId } from '@/lib/applications';
+import { boardKey, stageName, type Stage } from '@/lib/stages';
 import { useLanguage } from '@/i18n/LanguageProvider';
 import { majorLabel } from '@/lib/vacancy-options';
 import Avatar from './Avatar';
 
 type Props = {
   rows: Application[];
+  stages: Stage[];
   onOpen: (id: string) => void;
   onMove: (id: string, stage: StageId) => void;
 };
 
 const COLS = 'grid-cols-[minmax(200px,1.3fr)_minmax(140px,1fr)_minmax(120px,.9fr)_minmax(100px,.7fr)_minmax(130px,.9fr)_minmax(100px,.7fr)_minmax(130px,.8fr)]';
 
-export default function ApplicantList({ rows, onOpen, onMove }: Props) {
+export default function ApplicantList({ rows, stages, onOpen, onMove }: Props) {
   const { lang, t } = useLanguage();
   if (!rows.length) {
     return <p className="rounded-xl border border-dashed border-zinc-200 bg-white/60 py-16 text-center text-sm text-zinc-500">{t('app.listEmpty')}</p>;
@@ -55,14 +57,14 @@ export default function ApplicantList({ rows, onOpen, onMove }: Props) {
               <span className="truncate text-zinc-500">{a.candidate?.phone ?? '—'}</span>
               <span className="truncate text-zinc-500">{timeAgo(a.updated_at, t, lang)}</span>
               <select
-                value={a.status}
-                onChange={(e) => isStageId(e.target.value) && onMove(a.id, e.target.value)}
+                value={boardKey(a.status, stages)}
+                onChange={(e) => onMove(a.id, e.target.value)}
                 aria-label={t('app.stageFor', { name })}
                 className="h-8 w-full rounded-md border border-zinc-200 bg-white px-2 text-xs text-zinc-700 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
               >
-                {STAGES.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {stageLabel(s.id, t)}
+                {stages.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {stageName(s, t)}
                   </option>
                 ))}
               </select>
