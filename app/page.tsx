@@ -2,14 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  BriefcaseBusiness,
-  CalendarDays,
-  Inbox,
-  Plus,
-  UserCheck,
-} from "lucide-react";
+import { ArrowUpRight, Plus } from "lucide-react";
 import { STAGES, stageLabel, timeAgo } from "@/lib/applications";
 import { useLanguage, type TFunction } from "@/i18n/LanguageProvider";
 import { LOCALES, type Lang } from "@/i18n/types";
@@ -103,16 +96,16 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-zinc-200 bg-white">
-      <div className="flex items-start justify-between gap-3 px-5 pb-3 pt-4">
+    <section className="rounded-xl border border-zinc-200/80 bg-white">
+      <div className="flex items-start justify-between gap-3 px-5 pb-4 pt-5">
         <div>
-          <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
+          <h2 className="text-sm font-medium text-zinc-900">{title}</h2>
           {subtitle && <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p>}
         </div>
         {action && (
           <Link
             href={action.href}
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
           >
             {action.label}
             <ArrowUpRight size={14} />
@@ -124,34 +117,38 @@ function Card({
   );
 }
 
+/** One cell of the KPI strip: number first, label and context underneath. */
 function KpiCard({
   title,
   value,
   foot,
-  icon: Icon,
   loading,
 }: {
   title: string;
   value: string;
   foot: ReactNode;
-  icon: typeof Inbox;
   loading: boolean;
 }) {
-  if (loading) return <div className="h-29 animate-pulse rounded-xl bg-black/5" />;
   return (
-    <article className="rounded-xl border border-zinc-200 bg-white p-4">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm text-zinc-500">{title}</h2>
-        <Icon size={16} strokeWidth={1.5} className="text-zinc-400" aria-hidden="true" />
-      </div>
-      <p className="mt-2 text-2xl font-semibold tabular-nums tracking-tight text-zinc-900">{value}</p>
-      <p className="mt-1 text-xs text-zinc-500">{foot}</p>
+    <article className="bg-white px-5 py-5">
+      <h2 className="text-xs font-medium text-zinc-500">{title}</h2>
+      {loading ? (
+        <div className="mt-3 space-y-2" aria-hidden="true">
+          <div className="h-8 w-16 animate-pulse rounded-md bg-zinc-100" />
+          <div className="h-3 w-28 animate-pulse rounded bg-zinc-100" />
+        </div>
+      ) : (
+        <>
+          <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight text-zinc-900">{value}</p>
+          <p className="mt-1.5 text-xs text-zinc-500">{foot}</p>
+        </>
+      )}
     </article>
   );
 }
 
 function Skeleton({ className }: { className: string }) {
-  return <div className={`animate-pulse rounded-lg bg-black/5 ${className}`} />;
+  return <div className={`animate-pulse rounded-lg bg-zinc-100 ${className}`} />;
 }
 
 /* -------------------------------------------------------------------- page */
@@ -272,18 +269,18 @@ export default function DashboardPage() {
   if (emptyActive.length) attention.push({ text: t("dash.attention.emptyVac", { n: emptyActive.length }), href: "/vacancies" });
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-2 pb-6 ">
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div className="w-full">
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">{t("dash.title")}</h1>
-          <p className="text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{t("dash.title")}</h1>
+          <p className="mt-1 text-sm text-zinc-500">
             {now ? `${longDate(now, lang)} · ${t("dash.todayNew", { n: newToday })}` : t("dash.loadingData")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href="/vacancies"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
           >
             <Plus size={16} />
             {t("dash.addVacancy")}
@@ -305,16 +302,16 @@ export default function DashboardPage() {
 
       {/* what needs a decision right now */}
       {ready && (
-        <section aria-label={t("dash.attention.title")} className="mb-5 rounded-xl border border-zinc-200 bg-white">
-          <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-4">
-            <h2 className="text-sm font-semibold text-zinc-900">{t("dash.attention.title")}</h2>
+        <section aria-label={t("dash.attention.title")} className="mb-6 rounded-xl border border-zinc-200/80 bg-white">
+          <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-5">
+            <h2 className="text-sm font-medium text-zinc-900">{t("dash.attention.title")}</h2>
             <span className="text-xs text-zinc-500">{attention.length ? t("dash.attention.count", { n: attention.length }) : t("dash.attention.allGood")}</span>
           </div>
 
           {attention.length === 0 ? (
             <p className="px-5 pb-4 text-sm text-zinc-500">{t("dash.attention.none")}</p>
           ) : (
-            <div className="grid gap-x-8 gap-y-4 px-5 pb-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-4 px-5 pb-4 lg:grid-cols-2">
               <ul className="divide-y divide-zinc-100">
                 {attention.map((item) => (
                   <li key={item.text} className="flex items-center justify-between gap-3 py-2.5 text-sm">
@@ -322,7 +319,7 @@ export default function DashboardPage() {
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
                       <span className="truncate">{item.text}</span>
                     </span>
-                    <Link href={item.href} className="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-700">
+                    <Link href={item.href} className="shrink-0 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900">
                       {t("dash.view")}
                     </Link>
                   </li>
@@ -355,17 +352,19 @@ export default function DashboardPage() {
       )}
 
       {/* key numbers */}
-      <section aria-label={t("dash.stats")} aria-busy={loading} className="grid grid-cols-1 gap-3 min-[560px]:grid-cols-2 xl:grid-cols-4">
+      <section
+        aria-label={t("dash.stats")}
+        aria-busy={loading}
+        className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-zinc-200/80 bg-zinc-200/80 min-[560px]:grid-cols-2 xl:grid-cols-4"
+      >
         <KpiCard
           loading={!ready && !error}
-          icon={Inbox}
           title={t("dash.kpi.new")}
           value={num(waiting.length)}
           foot={!ready ? "" : waiting.length && now ? t("dash.kpi.oldest", { ago: ago(waiting[0].created_at) }) : t("dash.kpi.noneWaiting")}
         />
         <KpiCard
           loading={!ready && !error}
-          icon={CalendarDays}
           title={t("dash.kpi.week")}
           value={num(thisWeek)}
           foot={
@@ -380,22 +379,20 @@ export default function DashboardPage() {
         />
         <KpiCard
           loading={!ready && !error}
-          icon={BriefcaseBusiness}
           title={t("dash.kpi.activeVac")}
           value={num(activeVacancies.length)}
           foot={ready ? t("dash.kpi.vacFoot", { total: vacancies.length, inactive: vacancies.length - activeVacancies.length }) : ""}
         />
         <KpiCard
           loading={!ready && !error}
-          icon={UserCheck}
           title={t("dash.kpi.hired")}
           value={num(hired)}
           foot={!ready ? "" : hireRate === null ? t("dash.kpi.noApps") : t("dash.kpi.hireRate", { n: hireRate })}
         />
       </section>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
-        <div className="space-y-5">
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
+        <div className="space-y-6">
           <Card title={t("dash.trend.title")} subtitle={t("dash.trend.subtitle")}>
             {!ready ? (
               <Skeleton className="h-28" />
@@ -410,7 +407,7 @@ export default function DashboardPage() {
                     <div
                       key={i}
                       title={t("dash.trend.bar", { date: shortDate(d.date, lang), n: d.count })}
-                      className={`flex-1 rounded-sm ${d.count ? "bg-blue-500" : "bg-zinc-200"}`}
+                      className={`flex-1 rounded-[3px] ${d.count ? "bg-zinc-800" : "bg-zinc-100"}`}
                       style={{ height: d.count ? `${Math.max(8, (d.count / maxDay) * 100)}%` : "2px" }}
                     />
                   ))}
@@ -423,15 +420,15 @@ export default function DashboardPage() {
             )}
           </Card>
 
-          <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
-            <div className="flex items-start justify-between gap-3 px-5 pb-3 pt-4">
+          <section className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white">
+            <div className="flex items-start justify-between gap-3 px-5 pb-4 pt-5">
               <div>
-                <h2 className="text-sm font-semibold text-zinc-900">{t("dash.recent.title")}</h2>
+                <h2 className="text-sm font-medium text-zinc-900">{t("dash.recent.title")}</h2>
                 <p className="mt-0.5 text-xs text-zinc-500">{t("dash.recent.subtitle")}</p>
               </div>
               <Link
                 href="/applicants"
-                className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
               >
                 {t("dash.all")}
                 <ArrowUpRight size={14} />
@@ -456,7 +453,7 @@ export default function DashboardPage() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-155 border-collapse text-left">
                   <thead>
-                    <tr className="border-y border-zinc-100 text-xs font-medium text-zinc-500">
+                    <tr className="border-y border-zinc-100 bg-zinc-50/60 text-xs font-medium text-zinc-500">
                       <th className="px-5 py-2.5 font-medium">{t("dash.recent.candidate")}</th>
                       <th className="px-4 py-2.5 font-medium">{t("dash.recent.vacancy")}</th>
                       <th className="px-4 py-2.5 font-medium">{t("dash.recent.field")}</th>
@@ -472,7 +469,7 @@ export default function DashboardPage() {
                       const stage = stageOf(a.status, t);
 
                       return (
-                        <tr key={a.id} className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50">
+                        <tr key={a.id} className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50/70">
                           <td className="px-5 py-2.5">
                             <div className="flex items-center gap-3">
                               <Avatar
@@ -503,7 +500,7 @@ export default function DashboardPage() {
           </section>
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-6">
           <Card title={t("dash.funnel.title")} subtitle={t("dash.funnel.subtitle")}>
             {!ready ? (
               <Skeleton className="h-40" />
@@ -573,7 +570,7 @@ export default function DashboardPage() {
                       <span className="shrink-0 tabular-nums text-zinc-900">{count}</span>
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100">
-                      <div className="h-full rounded-full bg-blue-500" style={{ width: `${(count / maxCategory) * 100}%` }} />
+                      <div className="h-full rounded-full bg-zinc-800" style={{ width: `${(count / maxCategory) * 100}%` }} />
                     </div>
                   </li>
                 ))}

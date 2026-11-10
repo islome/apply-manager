@@ -74,13 +74,13 @@ export default function Avatar({
               src={src}
               alt={name}
               referrerPolicy="no-referrer"
-              className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-xl"
+              className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-overlay"
             />
             <button
               type="button"
               onClick={() => previewRef.current?.close()}
               aria-label={t('common.close')}
-              className="absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full bg-white text-zinc-800 shadow-lg transition-colors hover:bg-zinc-100"
+              className="absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full bg-white text-zinc-800 shadow-overlay transition-colors hover:bg-zinc-100"
             >
               <X size={18} />
             </button>

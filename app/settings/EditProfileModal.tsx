@@ -21,7 +21,7 @@ type Props = {
 };
 
 const fieldClass =
-  'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
+  'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5';
 
 // The API stores phones as +998XXXXXXXXX (no spaces). Accepts "90 123 45 67", "998901234567", "+998 90 123 45 67".
 // Returns '' for empty, null when it cannot be a valid Uzbek number.
@@ -88,7 +88,7 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/30 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/25 backdrop-blur-[2px] p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !busy) onClose();
       }}
@@ -97,7 +97,7 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-profile-title"
-        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 shadow-lg sm:p-6"
+        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-overlay sm:p-7"
       >
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
@@ -220,7 +220,7 @@ export default function EditProfileModal({ profile, onClose, onSaved }: Props) {
             <button
               type="submit"
               disabled={busy}
-              className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-10 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {busy ? t('common.saving') : t('common.save')}
             </button>

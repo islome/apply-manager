@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
     agentFeedback: true,
   },
   cacheComponents: true,
+  images: {
+    // login page photo (Unsplash CDN)
+    // (object form: the `new URL()` form would only match URLs without a query string)
+    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com", pathname: "/**" }],
+  },
   partialPrefetching: true,
   turbopack: {
     rules: {

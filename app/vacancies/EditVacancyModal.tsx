@@ -13,7 +13,7 @@ type Props = {
 };
 
 const fieldClass =
-  'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
+  'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5';
 
 export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props) {
   const t = useT();
@@ -69,7 +69,7 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/30 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/25 backdrop-blur-[2px] p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !busy) onClose();
       }}
@@ -78,7 +78,7 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-vacancy-title"
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 shadow-lg sm:p-6"
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-overlay sm:p-7"
       >
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
@@ -175,7 +175,7 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
               </label>
             </div>
             <label className="flex items-center gap-2 self-end pb-2.5 text-sm font-medium text-zinc-700">
-              <input name="is_active" type="checkbox" defaultChecked={vacancy.is_active} className="size-4 accent-blue-600" />
+              <input name="is_active" type="checkbox" defaultChecked={vacancy.is_active} className="size-4 accent-zinc-900" />
               {t('vac.active')}
             </label>
           </div>
@@ -188,7 +188,7 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
               maxLength={4000}
               rows={4}
               defaultValue={vacancy.description}
-              className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
             />
           </label>
 
@@ -199,7 +199,7 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
               maxLength={4000}
               rows={3}
               defaultValue={vacancy.requirements ?? ''}
-              className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
             />
           </label>
 
@@ -215,7 +215,7 @@ export default function EditVacancyModal({ vacancy, onClose, onUpdated }: Props)
             <button
               type="submit"
               disabled={busy}
-              className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-10 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {busy ? t('common.saving') : t('vac.submitEdit')}
             </button>

@@ -1,26 +1,61 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/*
+ * Design tokens. The UI is monochrome (zinc) with one ink colour for primary actions;
+ * colour is reserved for meaning: stage dots, success, warning and danger.
+ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  /* page background behind cards and the sidebar */
+  --color-canvas: #fafafa;
+  /* modals, drawers, popovers: the only elements that get a shadow */
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.04), 0 20px 48px -12px rgb(0 0 0 / 0.18);
+
+  /* motion: one easing curve for everything that slides or fades */
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-up: fade-up 420ms var(--ease-smooth) both;
+  --animate-image-in: image-in 1600ms var(--ease-smooth) both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes image-in {
+    from {
+      opacity: 0;
+      transform: scale(1.06);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-zinc-900);
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-zinc-900);
+    color: var(--color-white);
+  }
 }

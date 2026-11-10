@@ -138,13 +138,13 @@ export default function ApplicantsBoard() {
     stage === "all" ? STAGES : STAGES.filter((s) => s.id === stage);
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-4 py-2">
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div className="w-full">
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
             {t("app.title")}
           </h1>
-          <p className="text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-500">
             {t("app.subtitle")}
           </p>
         </div>
@@ -187,7 +187,7 @@ export default function ApplicantsBoard() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("app.searchPh")}
-            className="h-10 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            className="h-10 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
           />
         </label>
 
@@ -195,7 +195,7 @@ export default function ApplicantsBoard() {
           value={vacancyId}
           onChange={(e) => setVacancyId(e.target.value)}
           aria-label={t("app.filterVacancy")}
-          className="h-10 max-w-65 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          className="h-10 max-w-65 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
         >
           <option value="all">{t("app.allVacancies")}</option>
           {vacancies.map((v) => (
@@ -206,7 +206,7 @@ export default function ApplicantsBoard() {
         </select>
 
         <div
-          className="flex h-10 items-center gap-0.5 rounded-lg bg-black/5 p-1"
+          className="flex h-10 items-center gap-0.5 rounded-lg bg-zinc-100 p-1"
           role="group"
           aria-label={t("app.view")}
         >
@@ -241,7 +241,7 @@ export default function ApplicantsBoard() {
           className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
             stage === "all"
               ? "bg-white text-zinc-900 ring-1 ring-zinc-200"
-              : "text-zinc-600 hover:bg-black/5 hover:text-zinc-900"
+              : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
           }`}
         >
           {t("common.all")}
@@ -260,7 +260,7 @@ export default function ApplicantsBoard() {
               className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 active
                   ? "bg-white text-zinc-900 ring-1 ring-zinc-200"
-                  : "text-zinc-600 hover:bg-black/5 hover:text-zinc-900"
+                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
               }`}
             >
               <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
@@ -282,14 +282,14 @@ export default function ApplicantsBoard() {
           {STAGES.map((s) => (
             <div
               key={s.id}
-              className="h-55 animate-pulse rounded-xl bg-black/5"
+              className="h-55 animate-pulse rounded-xl bg-zinc-100"
             />
           ))}
         </div>
       )}
 
       {state === "error" && (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-200 bg-white/60 px-6 py-16 text-center">
           <h2 className="text-base font-semibold text-zinc-900">
             {t("app.loadFailed")}
           </h2>
@@ -297,7 +297,7 @@ export default function ApplicantsBoard() {
           <button
             type="button"
             onClick={retry}
-            className="h-9 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+            className="h-9 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800"
           >
             {t("app.tryAgain")}
           </button>
@@ -305,7 +305,7 @@ export default function ApplicantsBoard() {
       )}
 
       {state === "ok" && applications.length === 0 && (
-        <div className="rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
+        <div className="rounded-xl border border-dashed border-zinc-200 bg-white/60 px-6 py-16 text-center">
           <EmptyBoxAnimation />
           <h2 className="text-base font-semibold text-zinc-900">
             {t("app.noneTitle")}
@@ -340,8 +340,8 @@ export default function ApplicantsBoard() {
               <section
                 key={s.id}
                 aria-labelledby={`stage-${s.id}`}
-                className={`flex min-h-40 flex-col rounded-xl p-2.5 transition-colors ${
-                  over ? "bg-blue-50 ring-1 ring-blue-300" : "bg-black/4"
+                className={`flex min-h-40 flex-col rounded-xl p-2 transition-colors ${
+                  over ? "bg-zinc-100 ring-1 ring-zinc-300" : "bg-zinc-100/70"
                 }`}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -354,7 +354,7 @@ export default function ApplicantsBoard() {
                 }}
                 onDrop={(e) => onDrop(e, s.id)}
               >
-                <div className="flex items-center justify-between px-1.5 pb-3 pt-1">
+                <div className="flex items-center justify-between px-2 pb-2.5 pt-1.5">
                   <h2
                     id={`stage-${s.id}`}
                     className="flex items-center gap-2 text-sm font-medium text-zinc-900"
@@ -393,7 +393,7 @@ export default function ApplicantsBoard() {
                       onClick={() =>
                         setLimits((l) => ({ ...l, [s.id]: limit + PAGE }))
                       }
-                      className="shrink-0 rounded-lg py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
+                      className="shrink-0 rounded-lg py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-200/60 hover:text-zinc-900"
                     >
                       {t("app.showMore", { n: items.length - limit })}
                     </button>

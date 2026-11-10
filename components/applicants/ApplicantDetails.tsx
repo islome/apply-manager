@@ -72,12 +72,12 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
         if (e.target === e.currentTarget) onClose(); // click on the backdrop
       }}
       aria-labelledby="applicant-title"
-      className="my-0 mr-0 ml-auto h-dvh max-h-none w-[min(440px,100vw)] overflow-hidden border-0 border-l border-zinc-200 bg-white p-0 backdrop:bg-zinc-900/30"
+      className="my-0 mr-0 ml-auto h-dvh max-h-none w-[min(460px,100vw)] overflow-hidden border-0 border-l border-zinc-200 bg-white p-0 shadow-overlay backdrop:bg-zinc-950/25 backdrop:backdrop-blur-[2px]"
     >
       {a && (
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-3">
-            <h2 className="text-sm font-medium text-zinc-500">{t('app.candidate')}</h2>
+          <div className="flex h-14 items-center justify-between border-b border-zinc-100 px-6">
+            <h2 className="text-xs font-medium uppercase tracking-wider text-zinc-400">{t('app.candidate')}</h2>
             <button
               type="button"
               onClick={onClose}
@@ -88,11 +88,11 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 pb-6">
-            <div className="flex items-center gap-4 py-5">
+          <div className="flex-1 overflow-y-auto px-6 pb-8">
+            <div className="flex items-center gap-4 py-6">
               <Avatar key={c?.photo_url ?? name} name={name} url={c?.photo_url} className="h-14 w-14 text-base" />
               <div className="min-w-0">
-                <h3 id="applicant-title" className="wrap-break-word text-lg font-semibold tracking-tight text-zinc-900">
+                <h3 id="applicant-title" className="wrap-break-word text-xl font-semibold tracking-tight text-zinc-900">
                   {name}
                 </h3>
                 <p className="text-sm text-zinc-500">{c?.major ? majorLabel(c.major, t) : t('app.noMajor')}</p>
@@ -111,8 +111,8 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
                     onClick={() => onMove(a.id, s.id)}
                     className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                       active
-                        ? 'bg-zinc-900 text-white'
-                        : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                        ? "bg-zinc-900 text-white"
+                        : "text-zinc-600 ring-1 ring-inset ring-zinc-200 hover:bg-zinc-50 hover:text-zinc-900"
                     }`}
                   >
                     <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
@@ -146,7 +146,7 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
               <Field label={t('app.language')}>{c?.language_code ? c.language_code.toUpperCase() : t('app.notAdded')}</Field>
               <Field label={t('app.phone')}>
                 {c?.phone ? (
-                  <a className="text-blue-600 hover:underline" href={`tel:${c.phone}`}>
+                  <a className="text-zinc-900 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-900" href={`tel:${c.phone}`}>
                     {c.phone}
                   </a>
                 ) : (
@@ -156,7 +156,7 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
               <Field label="Telegram">
                 {c?.username ? (
                   <a
-                    className="text-blue-600 hover:underline"
+                    className="text-zinc-900 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-900"
                     href={`https://t.me/${encodeURIComponent(c.username)}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -164,7 +164,7 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
                     @{c.username}
                   </a>
                 ) : c?.telegram_id ? (
-                  <a className="text-blue-600 hover:underline" href={`tg://user?id=${c.telegram_id}`}>
+                  <a className="text-zinc-900 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-900" href={`tg://user?id=${c.telegram_id}`}>
                     {t('app.openInTelegram')}
                   </a>
                 ) : (
@@ -185,7 +185,7 @@ export default function ApplicantDetails({ a, onClose, onMove, onNotify }: Props
                 type="button"
                 onClick={onResume}
                 disabled={resumeBusy}
-                className="mt-5 inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-900 hover:bg-zinc-50 disabled:opacity-60"
+                className="mt-6 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-60"
               >
                 <DownloadIcon className="h-4 w-4" />
                 {resumeBusy ? t('app.opening') : t('app.openResume')}

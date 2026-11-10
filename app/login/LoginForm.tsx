@@ -51,21 +51,41 @@ export default function LoginForm() {
   }
 
   const inputClass =
-    'h-[46px] w-full rounded-[14px] border border-slate-200 bg-white px-3.5 text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100';
+    'h-11 w-full rounded-lg border border-zinc-200 bg-white px-3.5 text-sm text-zinc-900 outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-zinc-400 hover:border-zinc-300 focus:border-zinc-900 focus:ring-4 focus:ring-zinc-900/5';
+  const isRegister = mode === 'register';
+
+  function switchTo(next: 'login' | 'register') {
+    setMode(next);
+    setError('');
+  }
 
   return (
     <>
-      <div className="mb-5 grid grid-cols-2 rounded-full bg-slate-100 p-1">
+      {/* Heading changes with the mode; `key` replays the fade so the switch feels deliberate */}
+      <div key={mode} className="mb-8 animate-fade-up motion-reduce:animate-none">
+        <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-zinc-900">
+          {t(isRegister ? 'login.createTitle' : 'login.welcomeTitle')}
+        </h1>
+        <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+          {t(isRegister ? 'login.createSub' : 'login.welcomeSub')}
+        </p>
+      </div>
+
+      {/* Segmented switch with a sliding thumb */}
+      <div className="relative mb-8 grid grid-cols-2 rounded-xl bg-zinc-100 p-1">
+        <span
+          aria-hidden="true"
+          className={`absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-lg bg-white shadow-[0_1px_3px_rgb(0_0_0/0.08)] ring-1 ring-zinc-200/60 transition-transform duration-500 ease-smooth motion-reduce:transition-none ${
+            isRegister ? 'translate-x-full' : 'translate-x-0'
+          }`}
+        />
         <button
           type="button"
           disabled={busy}
-          aria-pressed={mode === 'login'}
-          onClick={() => {
-            setMode('login');
-            setError('');
-          }}
-          className={`h-10 rounded-full text-sm font-semibold transition-colors ${
-            mode === 'login' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+          aria-pressed={!isRegister}
+          onClick={() => switchTo('login')}
+          className={`relative z-10 h-9 rounded-lg text-sm font-medium transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 ${
+            !isRegister ? 'text-zinc-900' : 'text-zinc-500 hover:text-zinc-900'
           }`}
         >
           {t('login.signIn')}
@@ -73,27 +93,28 @@ export default function LoginForm() {
         <button
           type="button"
           disabled={busy}
-          aria-pressed={mode === 'register'}
-          onClick={() => {
-            setMode('register');
-            setError('');
-          }}
-          className={`h-10 rounded-full text-sm font-semibold transition-colors ${
-            mode === 'register' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+          aria-pressed={isRegister}
+          onClick={() => switchTo('register')}
+          className={`relative z-10 h-9 rounded-lg text-sm font-medium transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 ${
+            isRegister ? 'text-zinc-900' : 'text-zinc-500 hover:text-zinc-900'
           }`}
         >
           {t('login.signUp')}
         </button>
       </div>
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+
+      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
         {error && (
-          <div role="alert" className="rounded-[14px] bg-red-50 px-3.5 py-2.5 font-medium text-red-600">
+          <div
+            role="alert"
+            className="animate-fade-up rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700 motion-reduce:animate-none"
+          >
             {error}
           </div>
         )}
 
         <div>
-          <label htmlFor="username" className="mb-2 block text-[13px] font-semibold text-slate-900">
+          <label htmlFor="username" className="mb-2 block text-[13px] font-medium text-zinc-700">
             {t('login.username')}
           </label>
           <input
@@ -110,7 +131,7 @@ export default function LoginForm() {
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-2 block text-[13px] font-semibold text-slate-900">
+          <label htmlFor="password" className="mb-2 block text-[13px] font-medium text-zinc-700">
             {t('login.password')}
           </label>
           <input
@@ -118,23 +139,35 @@ export default function LoginForm() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            minLength={mode === 'register' ? 8 : undefined}
+            autoComplete={isRegister ? 'new-password' : 'current-password'}
+            minLength={isRegister ? 8 : undefined}
+            aria-describedby={isRegister ? 'password-hint' : undefined}
             className={inputClass}
           />
-          {mode === 'register' && (
-            <p className="mt-1.5 text-xs text-slate-500">{t('login.passwordHint')}</p>
-          )}
+          {/* Hint slides open only for sign-up (height via grid rows, so no layout jump) */}
+          <div
+            className={`grid transition-[grid-template-rows,opacity] duration-500 ease-smooth motion-reduce:transition-none ${
+              isRegister ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+            }`}
+          >
+            <div className="overflow-hidden">
+              <p id="password-hint" className="pt-2 text-xs text-zinc-500">
+                {t('login.passwordHint')}
+              </p>
+            </div>
+          </div>
         </div>
 
         <button
           type="submit"
           disabled={busy}
-          className="mt-1 h-[46px] rounded-full bg-blue-600 font-semibold text-white shadow-md hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="group mt-1 flex h-11 items-center justify-center overflow-hidden rounded-lg bg-zinc-900 text-sm font-medium text-white transition-[background-color,transform] duration-200 hover:bg-zinc-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {busy
-            ? t(mode === 'login' ? 'login.signingIn' : 'login.creating')
-            : t(mode === 'login' ? 'login.signIn' : 'login.create')}
+          <span key={`${mode}-${busy}`} className="animate-fade-up motion-reduce:animate-none">
+            {busy
+              ? t(isRegister ? 'login.creating' : 'login.signingIn')
+              : t(isRegister ? 'login.create' : 'login.signIn')}
+          </span>
         </button>
       </form>
     </>

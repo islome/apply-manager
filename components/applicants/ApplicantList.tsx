@@ -16,13 +16,13 @@ const COLS = 'grid-cols-[minmax(200px,1.3fr)_minmax(140px,1fr)_minmax(120px,.9fr
 export default function ApplicantList({ rows, onOpen, onMove }: Props) {
   const { lang, t } = useLanguage();
   if (!rows.length) {
-    return <p className="rounded-xl border border-dashed border-zinc-300 py-14 text-center text-sm text-zinc-500">{t('app.listEmpty')}</p>;
+    return <p className="rounded-xl border border-dashed border-zinc-200 bg-white/60 py-16 text-center text-sm text-zinc-500">{t('app.listEmpty')}</p>;
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+    <div className="overflow-x-auto rounded-xl border border-zinc-200/80 bg-white">
       <div className="min-w-250 divide-y divide-zinc-100">
-        <div className={`grid ${COLS} gap-4 px-4 py-2.5 text-xs font-medium text-zinc-500`} aria-hidden="true">
+        <div className={`grid ${COLS} gap-4 bg-zinc-50/60 px-4 py-2.5 text-xs font-medium text-zinc-500`} aria-hidden="true">
           <span>{t('app.colCandidate')}</span>
           <span>{t('app.colVacancy')}</span>
           <span>{t('app.colMajor')}</span>
@@ -37,14 +37,14 @@ export default function ApplicantList({ rows, onOpen, onMove }: Props) {
           return (
             <div
               key={a.id}
-              className={`grid ${COLS} items-center gap-4 px-4 py-2.5 text-sm transition-colors hover:bg-zinc-50`}
+              className={`grid ${COLS} items-center gap-4 px-4 py-2.5 text-sm transition-colors hover:bg-zinc-50/70`}
             >
               <div className="flex min-w-0 items-center gap-3">
                 <Avatar key={a.candidate?.photo_url ?? name} name={name} url={a.candidate?.photo_url} className="h-8 w-8 text-xs" />
                 <button
                   type="button"
                   onClick={() => onOpen(a.id)}
-                  className="truncate text-left font-medium text-zinc-900 hover:text-blue-600"
+                  className="truncate text-left font-medium text-zinc-900 underline-offset-4 hover:underline"
                 >
                   {name}
                 </button>
@@ -58,7 +58,7 @@ export default function ApplicantList({ rows, onOpen, onMove }: Props) {
                 value={a.status}
                 onChange={(e) => isStageId(e.target.value) && onMove(a.id, e.target.value)}
                 aria-label={t('app.stageFor', { name })}
-                className="h-8 w-full rounded-lg border border-zinc-200 bg-white px-2 text-xs text-zinc-700 outline-none focus:border-blue-500"
+                className="h-8 w-full rounded-md border border-zinc-200 bg-white px-2 text-xs text-zinc-700 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
               >
                 {STAGES.map((s) => (
                   <option key={s.id} value={s.id}>

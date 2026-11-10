@@ -14,6 +14,13 @@ const uz = {
   'login.signingIn': 'Kirilmoqda…',
   'login.creating': 'Akkaunt yaratilmoqda…',
   'login.create': 'Akkaunt yaratish',
+  'login.welcomeTitle': "Xush kelibsiz",
+  'login.welcomeSub': "Vakansiya va nomzodlarni boshqarish uchun hisobingizga kiring.",
+  'login.createTitle': "Akkaunt yarating",
+  'login.createSub': "Bir daqiqada ro'yxatdan o'ting va nomzodlarni qabul qilishni boshlang.",
+  'login.tagline': "Kerakli odamlarni ortiqcha shovqinsiz toping.",
+  'login.taglineSub': "Vakansiyalar, nomzodlar va jamoangiz — bir joyda.",
+  'login.photo': "Surat",
 } as const;
 
 const en: Dict<typeof uz> = {
@@ -30,6 +37,13 @@ const en: Dict<typeof uz> = {
   'login.signingIn': 'Signing in…',
   'login.creating': 'Creating account…',
   'login.create': 'Create account',
+  'login.welcomeTitle': "Welcome back",
+  'login.welcomeSub': "Sign in to manage your vacancies and candidates.",
+  'login.createTitle': "Create your account",
+  'login.createSub': "Set up in a minute and start receiving candidates.",
+  'login.tagline': "Find the right people, without the noise.",
+  'login.taglineSub': "Vacancies, candidates and your team in one quiet place.",
+  'login.photo': "Photo",
 };
 
 const ru: Dict<typeof uz> = {
@@ -46,6 +60,13 @@ const ru: Dict<typeof uz> = {
   'login.signingIn': 'Вход…',
   'login.creating': 'Создание аккаунта…',
   'login.create': 'Создать аккаунт',
+  'login.welcomeTitle': "С возвращением",
+  'login.welcomeSub': "Войдите, чтобы управлять вакансиями и кандидатами.",
+  'login.createTitle': "Создайте аккаунт",
+  'login.createSub': "Регистрация займёт минуту — и можно принимать кандидатов.",
+  'login.tagline': "Находите нужных людей — без лишнего шума.",
+  'login.taglineSub': "Вакансии, кандидаты и команда — в одном месте.",
+  'login.photo': "Фото",
 };
 
 const messages = { uz, en, ru };

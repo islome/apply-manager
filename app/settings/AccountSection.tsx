@@ -5,9 +5,9 @@ import { KeyRound, UserRound } from 'lucide-react';
 import { useT, type TFunction } from '@/i18n/LanguageProvider';
 
 const fieldClass =
-  'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
+  'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5';
 const buttonClass =
-  'h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60';
+  'h-10 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60';
 
 type Msg = { kind: 'ok' | 'err'; text: string } | null;
 
@@ -94,7 +94,7 @@ export default function AccountSection({ username, onRenamed }: { username: stri
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
+      <section className="rounded-xl border border-zinc-200/80 bg-white p-6">
         <h2 className="flex items-center gap-2 text-base font-semibold text-zinc-900">
           <UserRound size={18} /> {t('set.username')}
         </h2>
@@ -127,7 +127,7 @@ export default function AccountSection({ username, onRenamed }: { username: stri
         </form>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
+      <section className="rounded-xl border border-zinc-200/80 bg-white p-6">
         <h2 className="flex items-center gap-2 text-base font-semibold text-zinc-900">
           <KeyRound size={18} /> {t('set.changePassword')}
         </h2>

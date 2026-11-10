@@ -21,7 +21,7 @@ type Props = {
 };
 
 const field =
-  'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
+  'mt-1.5 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5';
 const label = 'text-sm font-medium text-zinc-700';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -122,7 +122,7 @@ export default function EmployeeEditModal({ employee: existing, headcount, onClo
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-900/30 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/25 backdrop-blur-[2px] p-0 sm:items-center sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !busy) onClose();
       }}
@@ -131,10 +131,10 @@ export default function EmployeeEditModal({ employee: existing, headcount, onClo
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-employee-title"
-        className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border border-zinc-200 bg-white shadow-xl sm:rounded-2xl"
+        className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border border-zinc-200/80 bg-white shadow-overlay sm:rounded-2xl"
       >
         <header className="flex items-start gap-3 border-b border-zinc-100 px-5 py-4 sm:px-6">
-          <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-blue-50 text-sm font-semibold text-blue-700">
+          <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-zinc-100 text-sm font-semibold text-zinc-700">
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={photo} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
@@ -237,7 +237,7 @@ export default function EmployeeEditModal({ employee: existing, headcount, onClo
                   maxLength={1000}
                   defaultValue={employee.notes ?? ''}
                   placeholder={t('emp.notesPh')}
-                  className="mt-1.5 w-full resize-y rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className="mt-1.5 w-full resize-y rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
                 />
               </label>
             </Section>
@@ -249,7 +249,7 @@ export default function EmployeeEditModal({ employee: existing, headcount, onClo
                   type="checkbox"
                   checked={addToCount}
                   onChange={(e) => setAddToCount(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-zinc-300 accent-blue-600"
+                  className="mt-0.5 h-4 w-4 rounded border-zinc-300 accent-zinc-900"
                 />
                 <span className="min-w-0 space-y-1">
                   <span className="block text-sm font-medium text-zinc-900">{t('emp.addToCount')}</span>
@@ -337,7 +337,7 @@ export default function EmployeeEditModal({ employee: existing, headcount, onClo
             <button
               type="submit"
               disabled={busy}
-              className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+              className="h-10 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
             >
               {busy ? t('common.saving') : t(isNew ? 'emp.addSubmit' : 'common.save')}
             </button>

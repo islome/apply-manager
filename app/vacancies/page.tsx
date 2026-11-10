@@ -6,7 +6,6 @@ import { useVacancies } from '@/hooks/useVacancies';
 import { useLanguage } from '@/i18n/LanguageProvider';
 import { employmentLabel, formatDate, salaryLabel, type Vacancy } from '@/lib/vacancies';
 import { cityLabel, majorLabel } from '@/lib/vacancy-options';
-import NotFoundAnimation from '../NotFoundAnimation';
 import EmptyBoxAnimation from '../EmptyBoxAnimation';
 import AddVacancyModal from './AddVacancyModal';
 import EditVacancyModal from './EditVacancyModal';
@@ -16,7 +15,7 @@ type Filter = 'all' | 'active' | 'inactive';
 const FILTERS: Filter[] = ['all', 'active', 'inactive'];
 
 const iconButton =
-  'grid h-8 w-8 place-items-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 disabled:opacity-50';
+  'grid h-8 w-8 place-items-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-50';
 const iconNeutral = 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900';
 const iconDanger = 'text-zinc-500 hover:bg-red-50 hover:text-red-600';
 const iconOn = 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700';
@@ -37,18 +36,18 @@ function VacancyCard({
   const { lang, t } = useLanguage();
 
   return (
-    <article className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300">
+    <article className="flex flex-col gap-4 rounded-xl border border-zinc-200/80 bg-white p-5 transition-[border-color,box-shadow] hover:border-zinc-300 hover:shadow-[0_1px_3px_rgb(0_0_0/0.05)]">
       <div className="flex items-start justify-between gap-3">
         <h3
-          className={`wrap-break-word text-base font-semibold leading-snug ${
-            v.is_active ? 'text-zinc-900' : 'text-zinc-600'
+          className={`wrap-break-word text-[15px] font-semibold leading-snug tracking-tight ${
+            v.is_active ? "text-zinc-900" : "text-zinc-500"
           }`}
         >
           {v.title}
         </h3>
         <span
           className={`inline-flex shrink-0 items-center gap-1.5 pt-0.5 text-xs font-medium ${
-            v.is_active ? 'text-emerald-700' : 'text-zinc-500'
+            v.is_active ? "text-zinc-700" : "text-zinc-500"
           }`}
         >
           <span className={`h-1.5 w-1.5 rounded-full ${v.is_active ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
@@ -57,19 +56,19 @@ function VacancyCard({
       </div>
 
       <div className="space-y-0.5">
-        <p className="text-sm font-medium text-zinc-900">{salaryLabel(v, t)}</p>
+        <p className="text-sm font-medium tabular-nums text-zinc-900">{salaryLabel(v, t)}</p>
         <p className="text-sm text-zinc-500">
           {v.company} · {cityLabel(v.city, t)}
         </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">{employmentLabel(v.employment_type, t)}</span>
-        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">{majorLabel(v.major, t)}</span>
-        <span className="px-1 text-xs font-medium text-blue-600">{t('vac.applications', { n: v.applications_count })}</span>
+        <span className="rounded-md px-2 py-0.5 text-xs text-zinc-600 ring-1 ring-inset ring-zinc-200">{employmentLabel(v.employment_type, t)}</span>
+        <span className="rounded-md px-2 py-0.5 text-xs text-zinc-600 ring-1 ring-inset ring-zinc-200">{majorLabel(v.major, t)}</span>
+        <span className="ml-auto text-xs tabular-nums text-zinc-500">{t('vac.applications', { n: v.applications_count })}</span>
       </div>
 
-      <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-3">
+      <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-3.5">
         <span className="text-xs text-zinc-500">{formatDate(v.created_at, lang)}</span>
         <div className="-mr-1.5 flex items-center gap-0.5" role="group" aria-label={t('vac.actionsAria', { title: v.title })}>
           <button
@@ -167,11 +166,11 @@ export default function VacanciesPage() {
   const activeCount = vacancies.filter((v) => v.is_active).length;
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-2 py-2">
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div className="w-full">
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">{t('vac.title')}</h1>
-          <p className="text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{t('vac.title')}</h1>
+          <p className="mt-1 text-sm text-zinc-500">
             {state === 'ok'
               ? vacancies.length
                 ? t('vac.summary', { total: vacancies.length, active: activeCount })
@@ -182,7 +181,7 @@ export default function VacanciesPage() {
         <button
           type="button"
           onClick={() => setAddModalOpen(true)}
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+          className="inline-flex h-10 items-center gap-2 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
         >
           <Plus size={16} />
           {t('vac.add')}
@@ -197,9 +196,9 @@ export default function VacanciesPage() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('vac.searchPlaceholder')}
             aria-label={t('vac.searchLabel')}
-            className="h-10 min-w-55 flex-1 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            className="h-10 min-w-55 flex-1 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
           />
-          <div className="flex h-10 items-center gap-0.5 rounded-lg bg-black/5 p-1" role="group" aria-label={t('vac.statusGroup')}>
+          <div className="flex h-10 items-center gap-0.5 rounded-lg bg-zinc-100 p-1" role="group" aria-label={t('vac.statusGroup')}>
             {FILTERS.map((f) => (
               <button
                 key={f}
@@ -218,22 +217,21 @@ export default function VacanciesPage() {
       )}
 
       {state === 'loading' && (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-3" aria-busy="true">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(300px,100%),1fr))] gap-4" aria-busy="true">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-44 animate-pulse rounded-xl bg-black/5" />
+            <div key={i} className="h-44 animate-pulse rounded-xl bg-zinc-100" />
           ))}
         </div>
       )}
 
       {state === 'error' && (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
-          <NotFoundAnimation />
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-200 bg-white/60 px-6 py-16 text-center">
           <h2 className="text-base font-semibold text-zinc-900">{t('vac.loadFailed')}</h2>
           <p className="max-w-sm text-sm text-zinc-600">{error}</p>
           <button
             type="button"
             onClick={retry}
-            className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+            className="h-10 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800"
           >
             {t('common.retry')}
           </button>
@@ -247,7 +245,7 @@ export default function VacanciesPage() {
       )}
 
       {state === 'ok' && vacancies.length === 0 && (
-        <div className="rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
+        <div className="rounded-xl border border-dashed border-zinc-200 bg-white/60 px-6 py-16 text-center">
           <EmptyBoxAnimation />
           <h2 className="text-base font-semibold text-zinc-900">{t('vac.emptyTitle')}</h2>
           <p className="mt-1 text-sm text-zinc-600">{t('vac.emptyHint')}</p>
@@ -262,7 +260,7 @@ export default function VacanciesPage() {
       )}
 
       {state === 'ok' && visible.length > 0 && (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(300px,100%),1fr))] gap-4">
           {visible.map((v) => (
             <VacancyCard
               key={v.id}

@@ -109,18 +109,18 @@ export default function SettingsPage() {
       aria-expanded={accountOpen}
       aria-controls="account-section"
       title={t('set.accountSettings')}
-      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
     >
       <Settings size={18} strokeWidth={1.5} />
     </button>
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-4 py-2">
-      <header className="mb-6 flex items-start justify-between gap-4">
+    <div className="w-full">
+      <header className="mb-8 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">{t('set.title')}</h1>
-          <p className="text-sm text-zinc-500">{t('set.subtitle')}</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{t('set.title')}</h1>
+          <p className="mt-1 text-sm text-zinc-500">{t('set.subtitle')}</p>
         </div>
         {status !== 'ok' && accountSettingsButton}
       </header>
@@ -133,17 +133,17 @@ export default function SettingsPage() {
         }`}
       >
         {status === 'loading' && (
-          <div className="h-72 animate-pulse rounded-xl bg-black/5" aria-busy="true" />
+          <div className="h-72 animate-pulse rounded-xl bg-zinc-100" aria-busy="true" />
         )}
 
         {status === 'error' && (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-200 bg-white/60 px-6 py-16 text-center">
             <h2 className="text-base font-semibold text-zinc-900">{t('set.loadFailed')}</h2>
             <p className="max-w-sm text-sm text-zinc-600">{errorStatus ? t('set.loadFailedStatus', { status: errorStatus }) : t('common.networkError')}</p>
             <button
               type="button"
               onClick={retry}
-              className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+              className="h-10 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800"
             >
               {t('common.retry')}
             </button>
@@ -151,7 +151,7 @@ export default function SettingsPage() {
         )}
 
         {status === 'empty' && (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-200 bg-white/60 px-6 py-16 text-center">
             <h2 className="text-base font-semibold text-zinc-900">{t('set.emptyTitle')}</h2>
             <p className="max-w-sm text-sm text-zinc-600">
               {t('set.emptyText')}
@@ -159,7 +159,7 @@ export default function SettingsPage() {
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+              className="h-10 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800"
             >
               {t('set.fillProfile')}
             </button>
@@ -168,7 +168,7 @@ export default function SettingsPage() {
 
         {status === 'ok' && profile && (
           <div className="w-full max-w-2xl">
-            <section className="rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
+            <section className="rounded-xl border border-zinc-200/80 bg-white p-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-4">
                   <Logo key={profile.logo_url ?? profile.company_name ?? ''} name={profile.company_name ?? ''} url={profile.logo_url} />
@@ -198,7 +198,7 @@ export default function SettingsPage() {
                 <Row label={t('set.hrName')}>{profile.hr_name || empty}</Row>
                 <Row label={t('set.hrPhone')}>
                   {profile.hr_phone ? (
-                    <a className="text-blue-600 hover:underline" href={`tel:${profile.hr_phone.replace(/\s/g, '')}`}>
+                    <a className="text-zinc-900 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-900" href={`tel:${profile.hr_phone.replace(/\s/g, '')}`}>
                       {formatPhone(profile.hr_phone)}
                     </a>
                   ) : (

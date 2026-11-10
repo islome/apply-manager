@@ -23,32 +23,32 @@ async function SectionContent({
   if (!page) notFound();
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f3f4f8] px-4 text-slate-900">
-      <section className="w-full max-w-md rounded-[21px] border border-slate-200/80 bg-white p-8 text-center shadow-[0_4px_12px_rgba(15,23,42,0.035)]">
-        <SectionAnimation className="mx-auto h-64 w-64 max-w-full" />
-        <h1 className="text-xl font-bold tracking-tight"><SectionText k={page.title} /></h1>
-        <p className="mt-2 text-sm text-slate-500">
+    <div className="flex min-h-[60vh] items-center justify-center text-zinc-900">
+      <section className="w-full max-w-sm text-center">
+        <SectionAnimation className="mb-5" />
+        <h1 className="text-lg font-semibold tracking-tight"><SectionText k={page.title} /></h1>
+        <p className="mt-2 text-sm text-zinc-500">
           <SectionText k="dash.section.wip" />
         </p>
         <Link
           href="/"
-          className="mt-6 inline-flex rounded-full bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
+          className="mt-6 inline-flex h-9 items-center rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
         >
           <SectionText k="dash.section.back" />
         </Link>
       </section>
-    </main>
+    </div>
   );
 }
 
 function SectionLoading() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f3f4f8] px-4 text-slate-900">
-      <div className="text-center">
-        <SectionAnimation className="mx-auto h-80 w-80 max-w-full" />
-        <p className="mt-2 text-sm text-slate-500"><SectionText k="dash.section.loading" /></p>
+    <div className="flex min-h-[60vh] items-center justify-center text-zinc-900">
+      <div className="animate-pulse text-center">
+        <SectionAnimation className="mb-3" />
+        <p className="mt-2 text-sm text-zinc-500"><SectionText k="dash.section.loading" /></p>
       </div>
-    </main>
+    </div>
   );
 }
 

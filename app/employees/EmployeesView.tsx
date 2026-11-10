@@ -32,7 +32,7 @@ function Avatar({ e, size = 'h-9 w-9' }: { e: Employee; size?: string }) {
   return (
     <span
       className={`${size} grid shrink-0 place-items-center overflow-hidden rounded-full text-xs font-semibold ${
-        e.status === 'left' ? 'bg-zinc-100 text-zinc-500' : 'bg-blue-50 text-blue-700'
+        e.status === 'left' ? 'bg-zinc-100 text-zinc-500' : 'bg-zinc-100 text-zinc-700'
       }`}
     >
       {photo ? (
@@ -50,8 +50,8 @@ function StatusBadge({ status }: { status: Employee['status'] }) {
   const active = status === 'active';
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-        active ? 'bg-emerald-50 text-emerald-700' : 'bg-zinc-100 text-zinc-600'
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium ${
+        active ? "text-zinc-700" : "text-zinc-500"
       }`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
@@ -62,7 +62,6 @@ function StatusBadge({ status }: { status: Employee['status'] }) {
 
 function Kpi({
   icon,
-  tone,
   label,
   value,
   hint,
@@ -70,7 +69,6 @@ function Kpi({
   current,
 }: {
   icon: React.ReactNode;
-  tone: string;
   label: string;
   value: string;
   hint?: string;
@@ -81,21 +79,24 @@ function Kpi({
 }) {
   const body = (
     <>
-      <div className="flex items-center gap-3">
-        <span className={`grid h-9 w-9 place-items-center rounded-lg ${tone}`}>{icon}</span>
-        <p className="flex-1 text-sm font-medium text-zinc-600">{label}</p>
-        {href && <ChevronRight size={16} className="text-zinc-400 transition-transform group-hover:translate-x-0.5" />}
+      <div className="flex items-center gap-2">
+        <p className="flex-1 text-xs font-medium text-zinc-500">{label}</p>
+        {href ? (
+          <ChevronRight size={16} className="text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-zinc-900" />
+        ) : (
+          <span className="text-zinc-300" aria-hidden="true">{icon}</span>
+        )}
       </div>
-      <p className="mt-3 text-2xl font-semibold tracking-tight tabular-nums text-zinc-900">{value}</p>
-      {hint && <p className="mt-0.5 text-xs text-zinc-500">{hint}</p>}
+      <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums text-zinc-900">{value}</p>
+      {hint && <p className="mt-1.5 text-xs text-zinc-500">{hint}</p>}
     </>
   );
-  const base = `rounded-xl border bg-white p-4 ${current ? 'border-blue-300 ring-2 ring-blue-100' : 'border-zinc-200'}`;
+  const base = `px-5 py-5 ${current ? "bg-zinc-50" : "bg-white"}`;
   if (!href) return <div className={base} aria-current={current ? 'page' : undefined}>{body}</div>;
   return (
     <Link
       href={href}
-      className={`${base} group block transition-colors hover:border-blue-300 hover:bg-blue-50/30 focus-visible:outline-2 focus-visible:outline-blue-500`}
+      className={`${base} group block transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400`}
     >
       {body}
     </Link>
@@ -164,27 +165,27 @@ export default function EmployeesView({ mode }: { mode: 'hired' | 'company' }) {
   const showControls = state === 'ok' && employees.length > 0;
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-2 py-2">
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div className="w-full">
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           {company && (
             <Link
               href="/employees"
-              className="mb-1 inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
+              className="mb-3 inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-zinc-900"
             >
               <ArrowLeft size={15} /> {t('emp.back')}
             </Link>
           )}
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
             {t(company ? 'emp.companyTitle' : 'emp.title')}
           </h1>
-          <p className="text-sm text-zinc-500">{t(company ? 'emp.companySubtitle' : 'emp.subtitle')}</p>
+          <p className="mt-1 text-sm text-zinc-500">{t(company ? 'emp.companySubtitle' : 'emp.subtitle')}</p>
         </div>
         {company && (
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
           >
             <Plus size={16} />
             {t('emp.add')}
@@ -192,10 +193,12 @@ export default function EmployeesView({ mode }: { mode: 'hired' | 'company' }) {
         )}
       </header>
 
-      <section aria-label={t('emp.title')} className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section
+        aria-label={t("emp.title")}
+        className="mb-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-zinc-200/80 bg-zinc-200/80 lg:grid-cols-4"
+      >
         <Kpi
-          icon={<UsersRound size={18} />}
-          tone="bg-blue-50 text-blue-600"
+          icon={<UsersRound size={16} strokeWidth={1.75} />}
           label={t('emp.kpiCompany')}
           value={num(headcount)}
           hint={t(company ? 'emp.kpiCompanyHintHere' : 'emp.kpiCompanyHint')}
@@ -203,21 +206,18 @@ export default function EmployeesView({ mode }: { mode: 'hired' | 'company' }) {
           current={company}
         />
         <Kpi
-          icon={<BadgeCheck size={18} />}
-          tone="bg-emerald-50 text-emerald-600"
+          icon={<BadgeCheck size={16} strokeWidth={1.75} />}
           label={t('emp.kpiActive')}
           value={state === 'ok' ? String(stats.active) : '—'}
           hint={t('emp.kpiActiveHint')}
         />
         <Kpi
-          icon={<CalendarPlus size={18} />}
-          tone="bg-violet-50 text-violet-600"
+          icon={<CalendarPlus size={16} strokeWidth={1.75} />}
           label={t('emp.kpiMonth')}
           value={state === 'ok' ? String(stats.thisMonth) : '—'}
         />
         <Kpi
-          icon={<UserMinus size={18} />}
-          tone="bg-zinc-100 text-zinc-600"
+          icon={<UserMinus size={16} strokeWidth={1.75} />}
           label={t('emp.kpiLeft')}
           value={state === 'ok' ? String(stats.left) : '—'}
         />
@@ -233,10 +233,10 @@ export default function EmployeesView({ mode }: { mode: 'hired' | 'company' }) {
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('emp.searchPh')}
               aria-label={t('emp.searchLabel')}
-              className="h-10 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="h-10 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
             />
           </div>
-          <div className="flex h-10 items-center gap-0.5 rounded-lg bg-black/5 p-1" role="group" aria-label={t('emp.statusGroup')}>
+          <div className="flex h-10 items-center gap-0.5 rounded-lg bg-zinc-100 p-1" role="group" aria-label={t('emp.statusGroup')}>
             {FILTERS.map((f) => (
               <button
                 key={f.id}
@@ -255,7 +255,7 @@ export default function EmployeesView({ mode }: { mode: 'hired' | 'company' }) {
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
             aria-label={t('emp.sortLabel')}
-            className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
           >
             {SORTS.map((s) => (
               <option key={s.id} value={s.id}>
@@ -269,13 +269,13 @@ export default function EmployeesView({ mode }: { mode: 'hired' | 'company' }) {
       {state === 'loading' && (
         <div className="space-y-2" aria-busy="true">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-black/5" />
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-zinc-100" />
           ))}
         </div>
       )}
 
       {state === 'error' && (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-200 bg-white/60 px-6 py-16 text-center">
           <h2 className="text-base font-semibold text-zinc-900">{t('emp.loadFailed')}</h2>
           <p className="max-w-sm text-sm text-zinc-600">
             {errorStatus ? t('emp.loadFailedStatus', { status: errorStatus }) : t('common.networkError')}
@@ -283,7 +283,7 @@ export default function EmployeesView({ mode }: { mode: 'hired' | 'company' }) {
           <button
             type="button"
             onClick={retry}
-            className="h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+            className="h-10 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800"
           >
             {t('common.retry')}
           </button>
@@ -291,7 +291,7 @@ export default function EmployeesView({ mode }: { mode: 'hired' | 'company' }) {
       )}
 
       {state === 'ok' && employees.length === 0 && (
-        <div className="rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center">
+        <div className="rounded-xl border border-dashed border-zinc-200 bg-white/60 px-6 py-16 text-center">
           <EmptyBoxAnimation />
           <h2 className="text-base font-semibold text-zinc-900">{t('emp.emptyTitle')}</h2>
           <p className="mx-auto mt-1 max-w-sm text-sm text-zinc-600">{t(company ? 'emp.emptyHintCompany' : 'emp.emptyHint')}</p>
@@ -308,9 +308,9 @@ export default function EmployeesView({ mode }: { mode: 'hired' | 'company' }) {
       {showControls && visible.length > 0 && (
         <>
           {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-xl border border-zinc-200 bg-white md:block">
+          <div className="hidden overflow-hidden rounded-xl border border-zinc-200/80 bg-white md:block">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-zinc-100 bg-zinc-50/70 text-xs font-medium uppercase tracking-wide text-zinc-500">
+              <thead className="border-b border-zinc-100 bg-zinc-50/60 text-xs font-medium text-zinc-500">
                 <tr>
                   <th scope="col" className="px-4 py-3">{t('emp.colEmployee')}</th>
                   <th scope="col" className="px-4 py-3">{t('emp.colPosition')}</th>
@@ -325,7 +325,7 @@ export default function EmployeesView({ mode }: { mode: 'hired' | 'company' }) {
                   <tr
                     key={e.id}
                     onClick={() => setEditing(e)}
-                    className={`group cursor-pointer transition-colors hover:bg-blue-50/40 ${e.status === 'left' ? 'text-zinc-500' : ''}`}
+                    className={`group cursor-pointer transition-colors hover:bg-zinc-50/70 ${e.status === 'left' ? 'text-zinc-500' : ''}`}
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
@@ -385,7 +385,7 @@ export default function EmployeesView({ mode }: { mode: 'hired' | 'company' }) {
                 <button
                   type="button"
                   onClick={() => setEditing(e)}
-                  className="w-full rounded-xl border border-zinc-200 bg-white p-3.5 text-left transition-colors hover:border-blue-200"
+                  className="w-full rounded-xl border border-zinc-200/80 bg-white p-4 text-left transition-colors hover:border-zinc-300"
                 >
                   <div className="flex items-start gap-3">
                     <Avatar e={e} size="h-10 w-10" />
