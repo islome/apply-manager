@@ -1,11 +1,16 @@
-/** Typographic 404 mark (was a Lottie animation; the name is kept so call sites stay the same). */
+"use client";
+
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+
+/** Animated 404 illustration (public/404-animation.json). */
 export default function NotFoundAnimation() {
   return (
-    <p
+    <DotLottieReact
+      src="/404-animation.json"
+      loop
+      autoplay
+      className="mx-auto h-56 w-56 max-w-full"
       aria-hidden="true"
-      className="mx-auto mb-2 select-none text-7xl font-semibold tracking-tighter text-zinc-200 tabular-nums"
-    >
-      404
-    </p>
+    />
   );
 }
