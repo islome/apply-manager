@@ -71,3 +71,72 @@
     color: var(--color-white);
   }
 }
+
+/*
+ * Login -> overview hand-off ("carry-over").
+ * 1. Login (data-handoff="out", set by LoginForm on success): the form side fades out and the photo
+ *    blurs where it is. Then the page navigates.
+ * 2. Next page (data-handoff="in", set once by the inline script in app/layout.tsx before first paint):
+ *    the same photo (--handoff-photo, the exact file the login page showed, so it comes from cache)
+ *    sits blurred in the same spot and dissolves while the page comes into focus. Under lg the login
+ *    page has no photo, so only the focus-in runs.
+ * "in" on <body> has no forwards fill on purpose: a leftover filter would trap position: fixed elements.
+ * Nothing runs with reduced motion.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-handoff="out"] [data-login-photo] {
+    animation: login-photo-blur 380ms var(--ease-smooth) forwards;
+  }
+
+  html[data-handoff="out"] [data-login-panel] {
+    animation: handoff-fade-out 300ms ease-out forwards;
+  }
+
+  html[data-handoff="in"] body {
+    animation: handoff-in 760ms var(--ease-smooth) 140ms backwards;
+  }
+}
+
+/* the carried-over photo: only where the login page shows one (lg and up) */
+@media (prefers-reduced-motion: no-preference) and (min-width: 64rem) {
+  html[data-handoff="in"]::after {
+    content: "";
+    position: fixed;
+    inset: 0 50% 0 0;
+    z-index: 100;
+    pointer-events: none;
+    background:
+      linear-gradient(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.4)),
+      var(--handoff-photo, none) center / cover no-repeat,
+      var(--color-zinc-950);
+    filter: blur(16px);
+    animation: handoff-photo-out 900ms var(--ease-smooth) forwards;
+  }
+}
+
+@keyframes login-photo-blur {
+  to {
+    filter: blur(16px);
+    transform: scale(1.03);
+  }
+}
+
+@keyframes handoff-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes handoff-photo-out {
+  to {
+    opacity: 0;
+    filter: blur(28px);
+  }
+}
+
+@keyframes handoff-in {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
