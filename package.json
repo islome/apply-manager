@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "eskiz:check": "node --env-file=.env.local scripts/eskiz-check.mjs"
   },
   "dependencies": {
     "@lottiefiles/dotlottie-react": "^0.20.0",
