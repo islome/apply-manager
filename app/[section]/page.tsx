@@ -6,7 +6,6 @@ import SectionText from "../SectionText";
 
 const sections = {
   applicants: { title: "dash.section.applicants" },
-  analytics: { title: "dash.section.analytics" },
   settings: { title: "dash.section.settings" },
 } as const;
 
