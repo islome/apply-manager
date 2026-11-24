@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getCompanyName, requireHr } from '@/lib/hr-auth';
 import { dbFail, fail, isUuid, readJson } from '@/lib/hr-http';
 import { parseVacancy } from '@/lib/hr-validate';
+import { notifyVacancyApplicants } from '@/lib/vacancy-notify';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -24,7 +25,23 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   }
   delete update.hr_user_id; // egasi o'zgartirilmaydi
 
-  const { data, error } = await supabaseAdmin()
+  const db = supabaseAdmin();
+
+  // Applicants hear about it only when is_active really flips, so read the old value first
+  let wasActive: boolean | null = null;
+  if (typeof update.is_active === 'boolean') {
+    const { data: before, error: beforeError } = await db
+      .from('vacancies')
+      .select('is_active')
+      .eq('id', id)
+      .eq('hr_user_id', auth.hr.id)
+      .maybeSingle();
+    if (beforeError) return dbFail(beforeError);
+    if (!before) return fail(404, 'Not found');
+    wasActive = before.is_active;
+  }
+
+  const { data, error } = await db
     .from('vacancies')
     .update(update)
     .eq('id', id)
@@ -33,6 +50,11 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     .maybeSingle();
   if (error) return dbFail(error);
   if (!data) return fail(404, 'Not found');
+
+  if (wasActive !== null && typeof data.is_active === 'boolean' && data.is_active !== wasActive) {
+    // Sent after the response, so many applicants never slow the HR down; failures are only logged
+    after(() => notifyVacancyApplicants(id, data.is_active, data.title));
+  }
   return NextResponse.json(data);
 }
 

@@ -116,6 +116,63 @@ async function tg(method: string, payload: Record<string, unknown>): Promise<boo
   }
 }
 
+// HR vakansiyani yopganda / qayta ochganda shu vakansiyaga ariza bergan nomzodlarga.
+// {v} = «<b>vakansiya nomi</b>» vakansiyasi (nom bo'lmasa: «Siz ariza topshirgan vakansiya»).
+const VACANCY_COPY: Record<'closed' | 'reopened', Copy> = {
+  closed: {
+    title: '⏸ Vakansiya yopildi',
+    body:
+      '{v} HR tomonidan vaqtincha yopildi. Arizangiz saqlanib qoladi. 📂\n' +
+      'Vakansiya qayta ochilsa, shu yerda xabar beramiz. Hozircha boshqa vakansiyalarni ham ko‘rib chiqing! 💫',
+    button: '🔎 Boshqa vakansiyalar',
+    buttonPath: 'vacancies',
+  },
+  reopened: {
+    title: '🔔 Vakansiya qayta ochildi!',
+    body:
+      '{v} yana faol. 🚀\n' +
+      'Arizangiz kuchda, uning holatini ilovada kuzatib boring. Natijani shu yerda xabar qilamiz! 📞',
+    button: '📱 Ilovani ochish',
+    buttonPath: 'applications',
+  },
+};
+
+/** Vakansiya yopilgani (active=false) yoki qayta ochilgani (active=true) haqidagi xabar (HTML) va tugma. */
+export function buildVacancyMessage(
+  active: boolean,
+  opts: Pick<MessageOpts, 'vacancyTitle' | 'fullName'> = {},
+): StatusMessage {
+  const copy = VACANCY_COPY[active ? 'reopened' : 'closed'];
+  const vacancy = opts.vacancyTitle
+    ? `«<b>${esc(opts.vacancyTitle)}</b>» vakansiyasi`
+    : 'Siz ariza topshirgan vakansiya';
+  const hello = opts.fullName ? `${esc(opts.fullName.split(' ')[0])}, ` : '';
+  const body = copy.body.replace('{v}', vacancy);
+  const text = `<b>${copy.title}</b>\n\n${hello}${hello ? body.charAt(0).toLowerCase() + body.slice(1) : body}`;
+
+  const base = env().MINI_APP_URL || DEFAULT_APP_URL;
+  return { text, button: copy.button, url: new URL(copy.buttonPath, base).toString() };
+}
+
+async function sendCard(chatId: number | string, msg: StatusMessage): Promise<boolean> {
+  return tg('sendMessage', {
+    chat_id: chatId,
+    text: msg.text,
+    parse_mode: 'HTML',
+    link_preview_options: { is_disabled: true },
+    reply_markup: { inline_keyboard: [[{ text: msg.button, web_app: { url: msg.url } }]] },
+  });
+}
+
+/** Nomzodga «vakansiya yopildi / qayta ochildi» xabari. Hech qachon throw qilmaydi. */
+export async function notifyVacancyStatus(
+  chatId: number | string,
+  active: boolean,
+  opts: Pick<MessageOpts, 'vacancyTitle' | 'fullName'> = {},
+): Promise<boolean> {
+  return sendCard(chatId, buildVacancyMessage(active, opts));
+}
+
 /** Sticker (bo'lsa) + matn + «Ilovani ochish» (web_app) tugmasi. Hech qachon throw qilmaydi. */
 export async function notifyStatusChange(
   chatId: number,
@@ -127,11 +184,5 @@ export async function notifyStatusChange(
 
   if (msg.sticker) await tg('sendSticker', { chat_id: chatId, sticker: msg.sticker });
 
-  await tg('sendMessage', {
-    chat_id: chatId,
-    text: msg.text,
-    parse_mode: 'HTML',
-    link_preview_options: { is_disabled: true },
-    reply_markup: { inline_keyboard: [[{ text: msg.button, web_app: { url: msg.url } }]] },
-  });
+  await sendCard(chatId, msg);
 }
